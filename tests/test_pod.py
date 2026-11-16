@@ -1,0 +1,92 @@
+import asyncio
+
+import pytest
+
+from adaptalux_control.adaptalux import CMD_START, CMD_STATUS, RX_UUID
+from adaptalux_control.pod import Pod
+
+
+class FakeClient:
+    is_connected = True
+
+    def __init__(self):
+        self.writes: list[bytes] = []
+        self.notify = None
+
+    async def connect(self): ...
+
+    async def start_notify(self, _uuid, cb):
+        self.notify = cb
+
+    async def write_gatt_char(self, uuid, data, response):
+        assert uuid == RX_UUID and response
+        self.writes.append(bytes(data))
+        if data == CMD_STATUS:
+            self.notify(None, bytearray.fromhex("808080808000aa001b0177"))
+
+    async def disconnect(self):
+        self.is_connected = False
+
+
+async def make() -> tuple[Pod, FakeClient]:
+    c = FakeClient()
+    pod = Pod(c)
+    await pod._open()
+    return pod, c
+
+
+def test_handshake_and_initial_state():
+    async def go():
+        pod, c = await make()
+        assert c.writes == [CMD_STATUS, CMD_START, CMD_START]
+        assert pod.arms == pytest.approx({a: 50 for a in range(1, 6)}, abs=0.5)
+
+    asyncio.run(go())
+
+
+def test_set_arms_keeps_other_arms():
+    async def go():
+        pod, c = await make()
+        await pod.set_arms({1: 25})
+        # arm 1 is wire byte 1; the rest keep the 50 % the pod reported
+        assert c.writes[-1].hex() == "7780c080808000"
+
+    asyncio.run(go())
+
+
+def test_ramp_ends_at_target():
+    async def go():
+        pod, c = await make()
+        await pod.ramp({4: 100}, duration=0.1, step=0.02)
+        assert pod.arms[4] == 100
+        assert c.writes[-1][5] == 0x00  # arm 4 is wire byte index 3 -> packet[4]
+
+    asyncio.run(go())
+
+
+def test_boost_and_unknown_arm():
+    async def go():
+        pod, c = await make()
+        await pod.set_boost(True)
+        assert c.writes[-1][-1] == 1
+        with pytest.raises(ValueError):
+            await pod.set_arms({6: 10})
+
+    asyncio.run(go())
+
+
+def test_refuses_above_100_and_sends_nothing():
+    async def go():
+        pod, c = await make()
+        n = len(c.writes)
+        for bad in ({1: 100.5}, {1: 50, 2: 101}, {1: -1}):
+            with pytest.raises(ValueError):
+                await pod.set_arms(bad)
+        with pytest.raises(ValueError):
+            await pod.set_all(150)
+        with pytest.raises(ValueError):
+            await pod.ramp({1: 120}, duration=0.1)
+        assert len(c.writes) == n
+        assert all(v <= 100 for v in pod.arms.values())
+
+    asyncio.run(go())

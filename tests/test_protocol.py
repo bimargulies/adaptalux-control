@@ -1,0 +1,61 @@
+import pytest
+
+from adaptalux_control.protocol import (
+    StatusReassembler,
+    byte_to_percent,
+    decode_control,
+    encode_arms,
+    encode_slots,
+    percent_to_byte,
+    slot_percents_to_arms,
+    status_slot_percents,
+)
+
+
+def test_known_bytes_from_capture():
+    assert [percent_to_byte(p) for p in (0, 25, 50, 75, 100)] == [
+        0xFF,
+        0xC0,
+        0x80,
+        0x40,
+        0x00,
+    ]
+
+
+def test_roundtrip():
+    for p in range(101):
+        assert byte_to_percent(percent_to_byte(p)) == pytest.approx(p, abs=0.5)
+
+
+def test_out_of_range_refused():
+    for bad in (-5, 100.01, 150, float("nan")):
+        with pytest.raises(ValueError):
+            percent_to_byte(bad)
+    with pytest.raises(ValueError):
+        encode_arms({1: 101})
+
+
+def test_four_arms_final_packet_from_capture():
+    # Final state of the four-arms capture, boost off.
+    assert encode_arms({1: 25, 2: 50, 3: 75, 4: 100}).hex() == "7780c0ff400000"
+
+
+def test_boost_flag():
+    assert encode_slots([0] * 5, boost=True) == bytes.fromhex("77ffffffffff01")
+
+
+def test_decode_control():
+    slots, boost = decode_control(bytes.fromhex("7780c0ff400000"))
+    assert boost is False
+    assert slots == pytest.approx([50, 25, 0, 75, 100], abs=0.5)
+    assert slot_percents_to_arms(slots) == pytest.approx(
+        {1: 25, 2: 50, 3: 75, 4: 100, 5: 0}, abs=0.5
+    )
+
+
+def test_status_reassembly():
+    r = StatusReassembler()
+    full = bytes.fromhex("808080808000aa001b0177")
+    assert r.feed(full[:4]) is None
+    assert r.feed(full[4:]) == full
+    assert status_slot_percents(full) == pytest.approx([50] * 5, abs=0.5)
