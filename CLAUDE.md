@@ -168,3 +168,10 @@ No notifications were received in response to the `77` or `24` writes.
   pods with arms plugged in. Wink + label lookup hardware-verified on fred (2026-11-16, user observed). Labels: fred, george (both identified 2026-11-16; each verified by lighting only that pod, user observed). Both can be connected from one Mac at the same time (writes succeed). Pods sometimes stop advertising while in Bluetooth mode; cause unknown (idle timeout? keepalive?) - untested.
 - The pod has a manual brightness control; bumping it changes arm levels with no command from us (seen on fred
   2026-11-16). Our remembered levels can therefore go stale; the `23` status reply may show such changes (untested).
+- Soak test 2026-11-16 (experiments/12_session_soak.py, 10 min, fred keepalive OFF, george keepalive ON): both pods
+  stayed connected the whole time, zero errors. So an open connection does NOT need the 30 s `23` keepalive (george's
+  replies kept arriving, status_age ~30 s). The earlier "stops advertising" dropouts happened while NOT connected and
+  are still unexplained. `Pod` keeps the keepalive by default (harmless; also detects a dead link).
+- Flash arms (Gen 2): per Adaptalux docs they need boost on (the app turns it on when a flash arm is selected),
+  levels 1-5, selected by double-tapping the port; app >= 1.4.0 (user has 1.5.0). No flash capture yet; the app
+  would not enter flash mode for the user. Do NOT guess flash packets (capacitor charging); capture first.
