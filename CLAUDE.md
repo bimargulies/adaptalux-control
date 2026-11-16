@@ -166,3 +166,5 @@ No notifications were received in response to the `77` or `24` writes.
   asks for a label, and saves label -> UUID in `~/.config/adaptalux-control/pods.yaml` (`registry.py`).
   Then `Pod.connect(label="bench")`. UUIDs are per-Mac; rerun identify if one changes. `Pod.wink()` only shows on
   pods with arms plugged in. Wink + label lookup hardware-verified on fred (2026-11-16, user observed). Labels: fred, george (both identified 2026-11-16; each verified by lighting only that pod, user observed). Both can be connected from one Mac at the same time (writes succeed). Pods sometimes stop advertising while in Bluetooth mode; cause unknown (idle timeout? keepalive?) - untested.
+- The pod has a manual brightness control; bumping it changes arm levels with no command from us (seen on fred
+  2026-11-16). Our remembered levels can therefore go stale; the `23` status reply may show such changes (untested).

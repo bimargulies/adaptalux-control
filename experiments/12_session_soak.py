@@ -1,7 +1,7 @@
-"""Hold sessions on pods and watch them: `12_session_soak.py MINUTES [LABEL ...]`.
+"""Hold sessions on pods and watch them: `12_session_soak.py MINUTES [LABEL[:off] ...]`.
 
-Connects to each label (default: fred george) with the 30 s status keepalive,
-then every 30 s prints, per pod: connected?, seconds since last status reply,
+Connects to each label (default: fred george) with the 30 s status keepalive
+(`LABEL:off` disables it for that pod, as a control), then every 30 s prints, per pod: connected?, seconds since last status reply,
 and any keepalive error. No lights are changed. Ctrl-C or the time limit ends it.
 """
 
@@ -16,15 +16,20 @@ async def main(minutes: float, labels: list[str]) -> None:
     t0 = time.monotonic()
     pods: dict[str, Pod] = {}
     try:
-        for label in labels:
-            pods[label] = await Pod.connect(label=label, timeout=20)
-            print(f"{time.monotonic() - t0:6.0f}s  {label}: connected", flush=True)
+        for spec in labels:
+            label, _, mode = spec.partition(":")
+            pods[spec] = await Pod.connect(
+                label=label,
+                timeout=20,
+                keepalive_interval=None if mode == "off" else 30.0,
+            )
+            print(f"{time.monotonic() - t0:6.0f}s  {spec}: connected", flush=True)
         while time.monotonic() - t0 < minutes * 60:
             await asyncio.sleep(30)
-            for label, pod in pods.items():
+            for spec, pod in pods.items():
                 age = pod.status_age
                 print(
-                    f"{time.monotonic() - t0:6.0f}s  {label}: "
+                    f"{time.monotonic() - t0:6.0f}s  {spec}: "
                     f"connected={pod._client.is_connected} "
                     f"status_age={'-' if age is None else f'{age:.0f}s'} "
                     f"error={pod.keepalive_error!r}",
