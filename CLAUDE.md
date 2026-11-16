@@ -175,3 +175,6 @@ No notifications were received in response to the `77` or `24` writes.
 - Flash arms (Gen 2): per Adaptalux docs they need boost on (the app turns it on when a flash arm is selected),
   levels 1-5, selected by double-tapping the port; app >= 1.4.0 (user has 1.5.0). No flash capture yet; the app
   would not enter flash mode for the user. Do NOT guess flash packets (capacitor charging); capture first.
+- How to enter flash mode in the iPhone app (worked for the user 2026-11-16, app 1.5.0, Pod 3.0): not automatic.
+  Double-tap the flash arm's port -> choose the Flash symbol -> bottom panel switches from the LED-brightness slider
+  to presets 1-5; boost turns on by itself. Keep pod power at 100 % for flash ports.
