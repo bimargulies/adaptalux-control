@@ -90,3 +90,19 @@ def test_refuses_above_100_and_sends_nothing():
         assert all(v <= 100 for v in pod.arms.values())
 
     asyncio.run(go())
+
+
+def test_wink_restores_levels_and_boost_untouched():
+    async def go():
+        pod, c = await make()
+        await pod.set_arms({1: 40})
+        await pod.set_boost(True)
+        before = pod.arms
+        n = len(c.writes)
+        await pod.wink(times=2, on=0, off=0)
+        assert pod.arms == before and pod.boost
+        assert all(w[-1] == 1 for w in c.writes[n:])  # boost flag kept
+        assert c.writes[-1] == c.writes[n - 1]  # last write = original state
+        assert len(c.writes) == n + 2 * 2 + 1
+
+    asyncio.run(go())

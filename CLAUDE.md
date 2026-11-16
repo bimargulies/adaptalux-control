@@ -158,3 +158,11 @@ No notifications were received in response to the `77` or `24` writes.
   only notify enabled and no `23`/`24`, `77` lit arm 1 clearly. (An earlier run was invalid: no arm in port 1.)
   `Pod` still sends `23` + `24` like the app; harmless. What `24` actually does is unknown.
 - Levels above 100 % are deliberately NOT supported: the code raises ValueError (and sends nothing) for any value outside 0..100.
+
+## Telling pods apart (2026-11-16)
+- Nothing readable on a Mac distinguishes two pods: same name, serial `0000`, system ID all zeros, advertisement
+  is only the name. macOS hides the BD_ADDR behind a per-Mac UUID. A pod connected to a phone does not advertise.
+- So each Mac learns once: `adaptalux-control identify` (or `identify_pods()`) winks each unlabelled visible pod,
+  asks for a label, and saves label -> UUID in `~/.config/adaptalux-control/pods.yaml` (`registry.py`).
+  Then `Pod.connect(label="bench")`. UUIDs are per-Mac; rerun identify if one changes. `Pod.wink()` only shows on
+  pods with arms plugged in. Not yet run against real hardware.

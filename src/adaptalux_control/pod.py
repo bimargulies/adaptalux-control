@@ -1,6 +1,7 @@
 """Async client for the Adaptalux Control Pod, built on bleak."""
 
 import asyncio
+from pathlib import Path
 from types import TracebackType
 from typing import Any, Self
 
@@ -15,12 +16,13 @@ from .adaptalux import (
 from .protocol import (
     ARM_TO_SLOT,
     SLOT_COUNT,
-    check_percent,
     StatusReassembler,
+    check_percent,
     encode_slots,
     slot_percents_to_arms,
     status_slot_percents,
 )
+from .registry import PodRegistry
 
 RAMP_STEP_S = 0.06  # the iPhone app sends a packet about every 60 ms
 
@@ -61,10 +63,23 @@ class Pod:
         *,
         name: str = DEVICE_NAME,
         address: str | None = None,
+        label: str | None = None,
+        registry_path: Path | None = None,
         timeout: float = 10.0,
     ) -> Self:
-        """Find the pod (by address if given, else by name or service UUID)."""
+        """Find the pod.
+
+        By ``label`` (looked up in this Mac's pod registry, see
+        :mod:`adaptalux_control.registry`), else by ``address``, else the first
+        pod found by name or service UUID. With two pods advertising, use a
+        label: the unlabelled form could pick either.
+        """
         from bleak import BleakClient, BleakScanner
+
+        if label is not None:
+            if address is not None:
+                raise ValueError("pass either label or address, not both")
+            address = PodRegistry.load(registry_path).address(label)
 
         if address is not None:
             device = await BleakScanner.find_device_by_address(address, timeout=timeout)
@@ -99,6 +114,25 @@ class Pod:
             pass  # keep all-zero assumption
         await self._write(CMD_START)
         await self._write(CMD_START)
+
+    async def wink(self, times: int = 3, on: float = 0.35, off: float = 0.25) -> None:
+        """Flash all arms so a person can see which pod this is.
+
+        Only arms that are plugged in will visibly light. Levels are restored
+        afterwards; the boost flag is not touched.
+        """
+        saved = list(self._slots)
+        try:
+            for _ in range(times):
+                self._slots = [100.0] * SLOT_COUNT
+                await self._send_state()
+                await asyncio.sleep(on)
+                self._slots = [0.0] * SLOT_COUNT
+                await self._send_state()
+                await asyncio.sleep(off)
+        finally:
+            self._slots = saved
+            await self._send_state()
 
     async def close(self) -> None:
         if self._client.is_connected:
