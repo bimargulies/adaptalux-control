@@ -1,6 +1,8 @@
 """Async client for the Adaptalux Control Pod, built on bleak."""
 
 import asyncio
+import logging
+import time
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Self
@@ -25,6 +27,9 @@ from .protocol import (
 from .registry import PodRegistry
 
 RAMP_STEP_S = 0.06  # the iPhone app sends a packet about every 60 ms
+KEEPALIVE_S = 30.0  # how often a session asks the pod for status
+
+log = logging.getLogger(__name__)
 
 
 class PodNotFound(Exception):
@@ -32,7 +37,13 @@ class PodNotFound(Exception):
 
 
 class Pod:
-    """Control a pod.
+    """Control a pod. A ``Pod`` is a session: from ``connect`` until ``close``.
+
+    While the session is open it asks the pod for its status every
+    ``keepalive_interval`` seconds (default 30; ``None`` turns this off), in
+    case the pod drops idle links or stops advertising. ``status_age`` says how
+    long ago the pod last answered, and ``keepalive_error`` holds the exception
+    if a keepalive write failed (usually: the link is gone).
 
     Close the iPhone app first (the pod takes one central at a time) and put
     the pod in Bluetooth mode (hold its top button until the blue light
@@ -47,8 +58,15 @@ class Pod:
     level of every arm and resends all five each time.
     """
 
-    def __init__(self, client: Any) -> None:
+    def __init__(
+        self, client: Any, keepalive_interval: float | None = KEEPALIVE_S
+    ) -> None:
         self._client = client
+        self._keepalive_interval = keepalive_interval
+        self._keepalive_task: asyncio.Task[None] | None = None
+        self._write_lock = asyncio.Lock()  # keepalive and commands share the link
+        self._last_status_time: float | None = None
+        self.keepalive_error: BaseException | None = None
         self._slots = [0.0] * SLOT_COUNT
         self._boost = False  # global boost flag: applies to every arm
         self._status = StatusReassembler()
@@ -66,6 +84,7 @@ class Pod:
         label: str | None = None,
         registry_path: Path | None = None,
         timeout: float = 10.0,
+        keepalive_interval: float | None = KEEPALIVE_S,
     ) -> Self:
         """Find the pod.
 
@@ -94,7 +113,7 @@ class Pod:
             raise PodNotFound(
                 "Pod not found: is it in Bluetooth mode and the phone app closed?"
             )
-        pod = cls(BleakClient(device))
+        pod = cls(BleakClient(device), keepalive_interval)
         await pod._open()
         return pod
 
@@ -102,6 +121,8 @@ class Pod:
         await self._client.connect()
         await self._client.start_notify(TX_UUID, self._on_notify)
         await self._handshake()
+        if self._keepalive_interval is not None:
+            self._keepalive_task = asyncio.create_task(self._keepalive_loop())
 
     async def _handshake(self) -> None:
         """Same opening as the app: 23 (status), then 24."""
@@ -135,6 +156,10 @@ class Pod:
             await self._send_state()
 
     async def close(self) -> None:
+        task, self._keepalive_task = self._keepalive_task, None
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
         if self._client.is_connected:
             await self._client.disconnect()
 
@@ -155,6 +180,13 @@ class Pod:
     def arms(self) -> dict[int, float]:
         """Last known percentage of each arm, {1: .., ..., 5: ..}."""
         return slot_percents_to_arms(self._slots)
+
+    @property
+    def status_age(self) -> float | None:
+        """Seconds since the pod last sent a status reply (None: never)."""
+        if self._last_status_time is None:
+            return None
+        return time.monotonic() - self._last_status_time
 
     @property
     def boost(self) -> bool:
@@ -218,10 +250,25 @@ class Pod:
         await self._write(encode_slots(self._slots, self._boost))
 
     async def _write(self, data: bytes) -> None:
-        await self._client.write_gatt_char(RX_UUID, data, response=True)
+        async with self._write_lock:
+            await self._client.write_gatt_char(RX_UUID, data, response=True)
+
+    async def _keepalive_loop(self) -> None:
+        assert self._keepalive_interval is not None
+        try:
+            while True:
+                await asyncio.sleep(self._keepalive_interval)
+                await self._write(CMD_STATUS)
+        except Exception as exc:  # noqa: BLE001 - record any failure; cancel passes through
+            self.keepalive_error = exc
+            log.warning("pod keepalive failed: %r", exc)
 
     def _on_notify(self, _sender: Any, data: bytearray) -> None:
         status = self._status.feed(bytes(data))
-        if status is not None and not self._status_ready.is_set():
+        if status is None:
+            return
+        self._last_status_time = time.monotonic()
+        log.debug("status: %s", status.hex(" "))
+        if not self._status_ready.is_set():
             self._status_slots = status_slot_percents(status)
             self._status_ready.set()

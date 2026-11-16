@@ -106,3 +106,48 @@ def test_wink_restores_levels_and_boost_untouched():
         assert len(c.writes) == n + 2 * 2 + 1
 
     asyncio.run(go())
+
+
+def test_keepalive_asks_for_status_and_stops_on_close():
+    async def go():
+        c = FakeClient()
+        pod = Pod(c, keepalive_interval=0.02)
+        await pod._open()
+        n = c.writes.count(CMD_STATUS)
+        await asyncio.sleep(0.1)
+        assert c.writes.count(CMD_STATUS) >= n + 2
+        assert pod.status_age is not None and pod.status_age < 0.05
+        await pod.close()
+        n = c.writes.count(CMD_STATUS)
+        await asyncio.sleep(0.06)
+        assert c.writes.count(CMD_STATUS) == n  # task cancelled
+
+    asyncio.run(go())
+
+
+def test_keepalive_failure_is_recorded_not_raised():
+    async def go():
+        c = FakeClient()
+        pod = Pod(c, keepalive_interval=0.02)
+        await pod._open()
+
+        async def boom(*a, **k):
+            raise OSError("link lost")
+
+        c.write_gatt_char = boom
+        await asyncio.sleep(0.06)
+        assert isinstance(pod.keepalive_error, OSError)
+        await pod.close()
+
+    asyncio.run(go())
+
+
+def test_keepalive_can_be_disabled():
+    async def go():
+        c = FakeClient()
+        pod = Pod(c, keepalive_interval=None)
+        await pod._open()
+        assert pod._keepalive_task is None
+        await pod.close()
+
+    asyncio.run(go())
