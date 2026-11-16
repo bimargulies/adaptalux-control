@@ -165,4 +165,4 @@ No notifications were received in response to the `77` or `24` writes.
 - So each Mac learns once: `adaptalux-control identify` (or `identify_pods()`) winks each unlabelled visible pod,
   asks for a label, and saves label -> UUID in `~/.config/adaptalux-control/pods.yaml` (`registry.py`).
   Then `Pod.connect(label="bench")`. UUIDs are per-Mac; rerun identify if one changes. `Pod.wink()` only shows on
-  pods with arms plugged in. Wink + label lookup hardware-verified on fred (2026-11-16, user observed). Labels: fred, george (both identified 2026-11-16).
+  pods with arms plugged in. Wink + label lookup hardware-verified on fred (2026-11-16, user observed). Labels: fred, george (both identified 2026-11-16; each verified by lighting only that pod, user observed). Both can be connected from one Mac at the same time (writes succeed). Pods sometimes stop advertising while in Bluetooth mode; cause unknown (idle timeout? keepalive?) - untested.
