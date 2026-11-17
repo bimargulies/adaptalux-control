@@ -216,3 +216,5 @@ No notifications were received in response to the `77` or `24` writes.
   and `set_flash_level` checks the pod's real boost, raising `BoostOff` (a ValueError) without sending a pulse if it is
   off. The pulse always leaves the arm's port at 100 %, so callers never set flash-port power themselves.
 - Flash arm firing with the Adaptalux trigger works (user tried it). Nothing to do in code: no way to trigger from here.
+- Hardware-verified 2026-11-16: `set_boost(False)` via the API dims fred's LED arms (user observed); on george, with
+  boost off, `set_flash_level` raises `BoostOff` and sends no pulse; boost restored and read back True.
