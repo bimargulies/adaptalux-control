@@ -15,11 +15,19 @@ Firing a flash is done by the Adaptalux trigger, not by this library.
 
 ## Install
 
-Requires macOS and Python 3.13+. With [uv](https://docs.astral.sh/uv/):
+Requires macOS. With [uv](https://docs.astral.sh/uv/) (which fetches Python 3.13
+itself), install the library and the window straight from GitHub:
 
 ```sh
-uv sync
+uv tool install "adaptalux-control[gui] @ git+https://github.com/bimargulies/adaptalux-control"
+adaptalux-gui                  # the window
+adaptalux-control identify     # name your pods (once per Mac)
 ```
+
+The first time, macOS asks whether Terminal may use Bluetooth: allow it. To update,
+run `uv tool upgrade adaptalux-control`.
+
+To work on the code instead, clone the repository and run `uv sync --extra gui`.
 
 ## Connecting
 

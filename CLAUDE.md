@@ -1,5 +1,29 @@
 # Adaptalux Control Pod — BLE protocol reverse engineering
 
+## Current state (start here)
+The project has moved past reverse engineering: it is a working library plus a Qt window, all hardware-verified.
+The sections below record how the protocol was decoded; where they disagree with this section or with
+"Protocol decoded from the 5-arm captures", the later sections win. Early "hypotheses" are superseded.
+- Repo: github.com/bimargulies/adaptalux-control (public, MIT). Python 3.13, macOS only, uv + bleak.
+- Code: `src/adaptalux_control/` — `protocol.py` (pure encode/decode), `pod.py` (`Pod` session), `lighting.py`,
+  `registry.py` (pod names per Mac), `gui/` (PySide6 + qasync window; `model.py` has no Qt). Docs: README.md.
+- Setting up on a new Mac: `uv sync --extra gui`, `uv run pytest` (no hardware needed), `uv run ruff check .`.
+  macOS asks to let the terminal use Bluetooth the first time. Put each pod in Bluetooth mode (hold the top button),
+  then `uv run adaptalux-control identify` (or Pods -> Identify Pods in the window) to name them: saved identifiers
+  are per Mac in `~/.config/adaptalux-control/pods.yaml`, so every Mac must do this itself.
+- GUI: `uv run adaptalux-gui`. Per pod: Boost, per-arm Empty/LED/Flash with slider or flash buttons 1-5, Standby
+  button (LED arms only; flash arms and boost left alone), File menu saves/restores YAML configs (saves only pods
+  the user has set up; restore touches only pods in the file). The pod cannot report what is plugged in or any
+  flash level, so the window shows arm modes from the last saved/restored file (kept in QSettings, along with window
+  geometry) and sends nothing at startup. Boost is re-read from the pod every 3 s. The app names itself
+  "Adaptalux" in the macOS menu bar via pyobjc.
+- Working with the user: they observe hardware, so do ONE change per step and stop to ask what they see. Never send
+  levels above 100 %. Pods sometimes stop advertising right after a disconnect: ask them to push the pod's button
+  again. Only one central connects at a time (the window holds the connection; quit it before running scripts).
+- Not done: a packaged .app (needs Bluetooth usage string in Info.plist and signing/notarization to avoid
+  Gatekeeper warnings on other Macs); Identify flow and two-pod Standby unverified on hardware via the window;
+  status bytes 5-8 undecoded (user does not want time spent on them).
+
 ## Goal
 Control an Adaptalux Control Pod (macro photography lighting) from a Python
 program on macOS, replacing the official iPhone app. Work so far: one BLE
