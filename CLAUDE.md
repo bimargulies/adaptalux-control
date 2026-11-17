@@ -209,3 +209,10 @@ No notifications were received in response to the `77` or `24` writes.
   per the user; only the left arm's 2->5 jump showed 4 for a while before 5. So the charging delay is real but
   not general (maybe large upward jumps / level 5); don't assume a fixed wait. The early odd readings remain
   not fully explained (arm mix-ups are the main suspect).
+- BOOST READBACK (2026-11-16): status reply byte 9 is the boost flag (00 off / 01 on), verified on fred by toggling
+  boost off/on/off and re-reading `23` each time; george (boost on) reads 01. Bytes 5-8 still unknown (george has
+  byte5=01, byte7=01, fred 00/00: maybe flash arms present; byte6 maybe battery). `Pod` now adopts boost from the pod
+  at connect (it used to assume off, so its first write would turn a pod's boost off!), `Pod.read_boost()` re-reads it,
+  and `set_flash_level` checks the pod's real boost, raising `BoostOff` (a ValueError) without sending a pulse if it is
+  off. The pulse always leaves the arm's port at 100 %, so callers never set flash-port power themselves.
+- Flash arm firing with the Adaptalux trigger works (user tried it). Nothing to do in code: no way to trigger from here.

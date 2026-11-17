@@ -3,7 +3,7 @@ import asyncio
 import pytest
 
 from adaptalux_control.adaptalux import CMD_START, CMD_STATUS, RX_UUID
-from adaptalux_control.pod import Pod
+from adaptalux_control.pod import BoostOff, Pod
 
 
 class FakeClient:
@@ -12,6 +12,7 @@ class FakeClient:
     def __init__(self):
         self.writes: list[bytes] = []
         self.notify = None
+        self.boost = 0  # the fake pod's boost flag, as last written in a 77 packet
 
     async def connect(self): ...
 
@@ -21,8 +22,12 @@ class FakeClient:
     async def write_gatt_char(self, uuid, data, response):
         assert uuid == RX_UUID and response
         self.writes.append(bytes(data))
+        if data[0] == 0x77:
+            self.boost = data[6]
         if data == CMD_STATUS:
-            self.notify(None, bytearray.fromhex("808080808000aa001b0177"))
+            self.notify(
+                None, bytearray.fromhex(f"808080808000aa001b{self.boost:02x}77")
+            )
 
     async def disconnect(self):
         self.is_connected = False
@@ -164,7 +169,7 @@ def test_flash_level_sequence(monkeypatch):
         await pod.set_boost(True)
         n = len(c.writes)
         await pod.set_flash_level(2, 3)  # app arm 2 = wire byte 0 = packet[1]
-        seq = c.writes[n:]
+        seq = [w for w in c.writes[n:] if w[0] == 0x77]  # skip the 23 boost check
         assert [p[1] for p in seq] == [0xFF] * 3 + [0x8D] * 2 + [0x00] * 2
         assert all(p[2:] == seq[0][2:] for p in seq)  # other slots and boost unchanged
         assert all(p[-1] == 1 for p in seq)
@@ -185,5 +190,42 @@ def test_flash_level_refusals():
             with pytest.raises(ValueError):
                 await pod.set_flash_level(arm, level)
         assert len(c.writes) == n
+
+    asyncio.run(go())
+
+
+def test_boost_adopted_from_pod_at_connect():
+    async def go():
+        c = FakeClient()
+        c.boost = 1  # pod already has boost on, as george did
+        pod = Pod(c)
+        await pod._open()
+        assert pod.boost is True
+        await pod.set_arms({1: 20})
+        assert c.writes[-1][-1] == 1  # an ordinary write must not switch it off
+
+    asyncio.run(go())
+
+
+def test_read_boost_sees_changes_made_at_the_pod():
+    async def go():
+        pod, c = await make()
+        assert await pod.read_boost() is False
+        c.boost = 1  # someone presses the pod's own boost control
+        assert await pod.read_boost() is True
+        assert pod.boost is True
+
+    asyncio.run(go())
+
+
+def test_flash_level_checks_the_pods_real_boost():
+    async def go():
+        pod, c = await make()
+        await pod.set_boost(True)
+        c.boost = 0  # pod's boost goes off behind our back
+        n = len([w for w in c.writes if w[0] == 0x77])
+        with pytest.raises(BoostOff):
+            await pod.set_flash_level(2, 3)
+        assert len([w for w in c.writes if w[0] == 0x77]) == n  # no pulse sent
 
     asyncio.run(go())

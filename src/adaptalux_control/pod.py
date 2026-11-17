@@ -24,6 +24,7 @@ from .protocol import (
     check_percent,
     encode_slots,
     slot_percents_to_arms,
+    status_boost,
     status_slot_percents,
 )
 from .registry import PodRegistry
@@ -36,6 +37,10 @@ log = logging.getLogger(__name__)
 
 class PodNotFound(Exception):
     pass
+
+
+class BoostOff(ValueError):
+    """The pod's boost is off, but the operation needs it on (flash arms)."""
 
 
 class Pod:
@@ -74,6 +79,8 @@ class Pod:
         self._status = StatusReassembler()
         self._status_ready = asyncio.Event()
         self._status_slots: list[float] | None = None
+        self._status_boost: bool | None = None
+        self._status_waiter: asyncio.Future[None] | None = None
 
     # -- connection ---------------------------------------------------------
 
@@ -133,6 +140,8 @@ class Pod:
             await asyncio.wait_for(self._status_ready.wait(), timeout=2.0)
             assert self._status_slots is not None
             self._slots = list(self._status_slots)  # adopt the pod's current state
+            if self._status_boost is not None:
+                self._boost = self._status_boost  # and its boost, so we don't flip it
         except TimeoutError:
             pass  # keep all-zero assumption
         await self._write(CMD_START)
@@ -215,10 +224,11 @@ class Pod:
         """Set a Gen 2 flash arm's power level (1-5), as the iPhone app does.
 
         The level is sent as a timed pulse on the arm's slot (see
-        ``protocol.FLASH_PULSE_BYTE``), then the arm is left at 100 %, which
-        flash arms need. Boost must already be on (``set_boost(True)``): a Pod
-        assumes boost is off until told otherwise, and flash arms do not charge
-        without it. The call returns once the pulse is sent; the arm then
+        ``protocol.FLASH_PULSE_BYTE``), and the arm's port is left at 100 %
+        power, which flash arms need; you do not set that yourself. Boost must
+        be on, and this checks the pod's actual boost state first: it raises
+        :class:`BoostOff` (a ValueError) without sending a pulse if boost is
+        off. Turn it on with ``set_boost(True)``. The call returns once the pulse is sent; the arm then
         charges to the new level; small changes show up almost at once, but a
         big jump up (seen: 2 -> 5) took up to about a minute, with the arm's
         LEDs climbing meanwhile. Do not use this on LED arms. Raises ValueError, sending
@@ -228,8 +238,8 @@ class Pod:
             raise ValueError(f"no such arm {arm}; arms are 1-{SLOT_COUNT}")
         if level not in FLASH_LEVEL_SECONDS:
             raise ValueError(f"flash level must be 1-5, got {level!r}")
-        if not self._boost:
-            raise ValueError("flash arms need boost: call set_boost(True) first")
+        if not await self.read_boost():
+            raise BoostOff("flash arms need boost: call set_boost(True) first")
         index = 1 + ARM_TO_SLOT[arm]  # position of the arm's byte in the packet
 
         async def send(byte: int, times: int) -> None:
@@ -255,6 +265,24 @@ class Pod:
         """Turn the global boost on/off; it brightens all arms at once."""
         self._boost = on
         await self._send_state()
+
+    async def read_boost(self, timeout: float = 2.0) -> bool:
+        """Ask the pod whether boost is on, and remember the answer.
+
+        The pod reports boost in its status reply, so this also notices someone
+        pressing the pod's own boost control. Raises TimeoutError if the pod
+        does not answer.
+        """
+        waiter = asyncio.get_running_loop().create_future()
+        self._status_waiter = waiter
+        try:
+            await self._write(CMD_STATUS)
+            await asyncio.wait_for(waiter, timeout)
+        finally:
+            self._status_waiter = None
+        assert self._status_boost is not None
+        self._boost = self._status_boost
+        return self._boost
 
     async def ramp(
         self,
@@ -306,6 +334,9 @@ class Pod:
         status = self._status.feed(bytes(data))
         if status is None:
             return
+        self._status_boost = status_boost(status)
+        if self._status_waiter is not None and not self._status_waiter.done():
+            self._status_waiter.set_result(None)
         self._last_status_time = time.monotonic()
         log.debug("status: %s", status.hex(" "))
         if not self._status_ready.is_set():

@@ -40,6 +40,15 @@ def test_four_arms_final_packet_from_capture():
     assert encode_arms({1: 25, 2: 50, 3: 75, 4: 100}).hex() == "7780c0ff400000"
 
 
+def test_status_boost():
+    from adaptalux_control.protocol import status_boost
+
+    assert (
+        status_boost(bytes.fromhex("80808080800 0bd00020077".replace(" ", ""))) is False
+    )
+    assert status_boost(bytes.fromhex("808080808000bd00020177")) is True
+
+
 def test_boost_flag():
     assert encode_slots([0] * 5, boost=True) == bytes.fromhex("77ffffffffff01")
 

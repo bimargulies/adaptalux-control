@@ -15,7 +15,8 @@ Control packet, written to the RX characteristic:
   flag for the whole pod, not per arm: it brightens every arm, at every level.
 
 The status reply to ``23`` is 11 bytes; its first five bytes are the five slot
-bytes in the same encoding (0x80 = 50 % on a freshly powered pod).
+bytes in the same encoding (0x80 = 50 % on a freshly powered pod). Byte 9 is the
+global boost flag (see ``status_boost``).
 """
 
 from collections.abc import Mapping, Sequence
@@ -31,6 +32,7 @@ FLASH_LEVEL_SECONDS = {1: 0.52, 2: 0.76, 3: 1.03, 4: 1.30, 5: 1.58}
 SLOT_COUNT = 5
 PACKET_LEN = 7
 STATUS_LEN = 11
+STATUS_BOOST_INDEX = 9  # 00 = boost off, 01 = boost on (verified by toggling it)
 
 # App arm number (1-based, in the order the iPhone app lays them out: arms 1-2
 # on the top row, 3-5 on the bottom row) -> index of its slot byte within the
@@ -118,3 +120,10 @@ def status_slot_percents(status: bytes) -> list[float]:
     if len(status) != STATUS_LEN:
         raise ValueError(f"status must be {STATUS_LEN} bytes, got {len(status)}")
     return [byte_to_percent(b) for b in status[:SLOT_COUNT]]
+
+
+def status_boost(status: bytes) -> bool:
+    """Whether the pod reports boost as on, from a status reply."""
+    if len(status) != STATUS_LEN:
+        raise ValueError(f"status must be {STATUS_LEN} bytes, got {len(status)}")
+    return bool(status[STATUS_BOOST_INDEX])
