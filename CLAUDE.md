@@ -135,7 +135,7 @@ No notifications were received in response to the `77` or `24` writes.
 - Not yet tested: upper level range; `77` without `24`;
   other ports; last byte of `77`.
 - Scripts: the exploration scripts that were in `experiments/` (00-12) have been removed from the tree; they are in git
-  history (last present in commit dc567dc). Current scripts are in `examples/`; user-facing docs are in README.md.
+  history (last present in the commit titled "Read boost back from the pod; flash levels require pod boost on"). Current scripts are in `examples/`; user-facing docs are in README.md.
 
 ## Protocol decoded from the 5-arm captures (2026-11-16) — supersedes hypotheses above
 - Slot bytes are INVERTED: `0xFF` = 0 % (off), `0x80` = 50 %, `0x40` = 75 %, `0x00` = 100 %
