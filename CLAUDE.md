@@ -201,3 +201,6 @@ No notifications were received in response to the `77` or `24` writes.
   CHARGES to the new level (level 5 showed 4 for a while, then 5 after ~a minute), so wait up to a minute before
   judging a result. This likely explains the confusing early readings. `set_flash_level` returns when the pulse is sent,
   not when the arm has finished charging.
+- Lowering works (2026-11-16): level 1 sent to arm 2 while it was at 4 -> it blinked and landed at 1 (quickly).
+  Status reply `23` is identical before/after a flash level change (`00 00 80 80 80 01 b0 01 03 01 77`), so the
+  pod does NOT report flash levels; our code must remember the last level it set (and the app/arm can change it).
