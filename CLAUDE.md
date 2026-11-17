@@ -17,11 +17,14 @@ The sections below record how the protocol was decoded; where they disagree with
   flash level, so the window shows arm modes from the last saved/restored file (kept in QSettings, along with window
   geometry) and sends nothing at startup. Boost is re-read from the pod every 3 s. The app names itself
   "Adaptalux" in the macOS menu bar via pyobjc.
+- Identify via the window hardware-verified 2026-11-17 (both pods named, panels appeared). Gotcha: bleak on macOS
+  returns addresses as `objc.pyobjc_unicode` (a str subclass) that `yaml.safe_dump` rejects; registry stores `str()`.
+  Window errors print full tracebacks to stderr; launch `adaptalux-gui` from a terminal to see them.
 - Working with the user: they observe hardware, so do ONE change per step and stop to ask what they see. Never send
   levels above 100 %. Pods sometimes stop advertising right after a disconnect: ask them to push the pod's button
   again. Only one central connects at a time (the window holds the connection; quit it before running scripts).
 - Not done: a packaged .app (needs Bluetooth usage string in Info.plist and signing/notarization to avoid
-  Gatekeeper warnings on other Macs); Identify flow and two-pod Standby unverified on hardware via the window;
+  Gatekeeper warnings on other Macs); two-pod Standby unverified on hardware via the window;
   status bytes 5-8 undecoded (user does not want time spent on them).
 
 ## Goal
