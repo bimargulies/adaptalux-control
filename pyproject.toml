@@ -16,6 +16,14 @@ dependencies = [
 
 [project.scripts]
 adaptalux-control = "adaptalux_control:main"
+adaptalux-gui = "adaptalux_control.gui:main"
+
+[project.optional-dependencies]
+gui = [
+    "pyobjc-framework-cocoa>=10 ; sys_platform == 'darwin'",
+    "pyside6-essentials>=6.8",
+    "qasync>=0.27",
+]
 
 [build-system]
 requires = ["uv_build>=0.11.23,<0.12.0"]

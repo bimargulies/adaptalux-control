@@ -166,6 +166,22 @@ async with await Pod.connect(label="bench") as pod:
 - Without `label` (or `address=`), `Pod.connect()` takes the first pod it finds, so
   use a label whenever more than one pod is advertising.
 
+## Window
+
+A small window controls every named pod (see *Several pods*):
+
+```sh
+uv sync --extra gui
+uv run adaptalux-gui
+```
+
+Each pod has a section with a Boost switch and, for each arm, an Empty / LED / Flash
+switch with a brightness slider (LED) or power buttons 1-5 (Flash). The Standby button
+at the top turns every LED arm off and, pressed again, puts them back. Flash arms and
+boost are left alone. **File** saves and restores the whole setup to a YAML file;
+**Pods → Identify Pods…** names new pods. Which arms are empty, LED or flash is
+remembered only in saved files, because the pod cannot report it.
+
 ## Sessions
 
 A `Pod` is a session, from `connect` until `close` (use `async with`). While it is
