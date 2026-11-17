@@ -196,3 +196,8 @@ No notifications were received in response to the `77` or `24` writes.
   previous pulse. Packets for empty ports (`80 80 80` vs the app's `ff ff 69`) are NOT the cause (level 4 worked with 80s).
 - Status byte 5 = boost flag (01 on). Byte 6 (0xb2 = 178 = 69.8 %) may be battery but the app said 65 %; unproven.
 - Pod 3.0 on the charger all along, so low battery is not the explanation for odd flash levels.
+- Both flash ports verified 2026-11-16: arm 2 (right top hole, slot byte 0) and arm 1 (left top hole, slot byte 1)
+  each took a level pulse and the other arm did not change. IMPORTANT for observing: the arm's LEDs climb while it
+  CHARGES to the new level (level 5 showed 4 for a while, then 5 after ~a minute), so wait up to a minute before
+  judging a result. This likely explains the confusing early readings. `set_flash_level` returns when the pulse is sent,
+  not when the arm has finished charging.
