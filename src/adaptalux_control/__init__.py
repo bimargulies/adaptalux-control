@@ -1,12 +1,11 @@
 from .lighting import Lighting
-from .pod import BoostOff, NothingToRestore, Pod, PodNotFound
+from .pod import BoostOff, Pod, PodNotFound
 from .protocol import encode_arms, encode_slots, percent_to_byte
 from .registry import PodRegistry, UnknownPod, identify_pods, scan_pods
 
 __all__ = [
     "BoostOff",
     "Lighting",
-    "NothingToRestore",
     "Pod",
     "PodNotFound",
     "PodRegistry",

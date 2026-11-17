@@ -40,10 +40,6 @@ class PodNotFound(Exception):
     pass
 
 
-class NothingToRestore(Exception):
-    """``restore()`` was called with no saved lighting."""
-
-
 class BoostOff(ValueError):
     """The pod's boost is off, but the operation needs it on (flash arms)."""
 
@@ -88,7 +84,6 @@ class Pod:
         self.keepalive_error: BaseException | None = None
         self._slots = [0.0] * SLOT_COUNT
         self._boost = False  # global boost flag: applies to every arm
-        self._saved: Lighting | None = None
         self._status = StatusReassembler()
         self._status_ready = asyncio.Event()
         self._status_slots: list[float] | None = None
@@ -187,11 +182,6 @@ class Pod:
         return slot_percents_to_arms(self._slots)
 
     @property
-    def saved_lighting(self) -> Lighting | None:
-        """The configuration ``lights_off`` saved, until ``restore`` uses it."""
-        return self._saved
-
-    @property
     def status_age(self) -> float | None:
         """Seconds since the pod last sent a status reply (None: never)."""
         if self._last_status_time is None:
@@ -285,37 +275,28 @@ class Pod:
         return Lighting(self.arms, self._boost)
 
     async def lights_off(self, arms: list[int] | None = None) -> Lighting:
-        """Turn arms off (all five by default), remembering how they were.
+        """Turn arms off (all five by default) and return how they were.
 
-        Returns the saved configuration, and ``restore()`` brings it back. Calling
-        this again while everything is already dark keeps the original; if lights
-        were changed in between, the new configuration is the one remembered.
-        Boost is left as it is. Flash arms are not remembered (their levels cannot
-        be read); restoring only gives their ports their old power.
+        The returned :class:`Lighting` is yours to keep; pass it to ``restore`` to
+        turn everything back on. Nothing is remembered here, so calling this again
+        while the lights are already dark returns the dark state: keep the first
+        one. Boost is left as it is. Flash arm levels cannot be read, so they are
+        not part of the result.
         """
         chosen = list(arms) if arms is not None else list(ARM_TO_SLOT)
         for arm in chosen:
             if arm not in ARM_TO_SLOT:
                 raise ValueError(f"no such arm {arm}; arms are 1-{SLOT_COUNT}")
-        current = self.snapshot()
-        if self._saved is None or not current.is_dark:
-            self._saved = current
+        before = self.snapshot()
         await self.set_arms({arm: 0.0 for arm in chosen})
-        return self._saved
+        return before
 
-    async def restore(self, lighting: Lighting | None = None) -> None:
-        """Put back a saved configuration: the one ``lights_off`` remembered, or
-        the ``Lighting`` you pass (for example one loaded from a file). All five
-        arms and boost are set in one packet. Raises NothingToRestore if there
-        is neither."""
-        lighting = lighting if lighting is not None else self._saved
-        if lighting is None:
-            raise NothingToRestore("no saved lighting: call lights_off() first")
+    async def restore(self, lighting: Lighting) -> None:
+        """Set all five arms and boost to a saved configuration, in one packet."""
         for arm, percent in lighting.arms.items():
             self._slots[ARM_TO_SLOT[arm]] = percent
         self._boost = lighting.boost
         await self._send_state()
-        self._saved = None
 
     async def set_boost(self, on: bool) -> None:
         """Turn the global boost on or off. It affects every arm at once."""

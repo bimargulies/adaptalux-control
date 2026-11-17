@@ -1,9 +1,6 @@
-"""A remembered lighting configuration: every arm's brightness, and boost."""
+"""A lighting configuration: every arm's brightness, and boost."""
 
 from dataclasses import dataclass
-from pathlib import Path
-
-import yaml
 
 from .protocol import ARM_TO_SLOT, check_percent
 
@@ -12,7 +9,9 @@ from .protocol import ARM_TO_SLOT, check_percent
 class Lighting:
     """Brightness (0-100 %) of arms 1-5, and the global boost flag.
 
-    Flash arm levels are not part of this: the pod cannot report them.
+    Flash arm levels are not part of this: the pod cannot report them. The object
+    is plain data (``dataclasses.asdict`` turns it into a dict), so the caller
+    decides whether to keep it in memory or write it somewhere.
     """
 
     arms: dict[int, float]
@@ -28,18 +27,3 @@ class Lighting:
     def is_dark(self) -> bool:
         """True if every arm is at 0 %."""
         return all(percent == 0 for percent in self.arms.values())
-
-    def save(self, path: Path) -> None:
-        path = Path(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        data = {"arms": dict(self.arms), "boost": self.boost}
-        path.write_text(yaml.safe_dump(data, sort_keys=True))
-
-    @classmethod
-    def load(cls, path: Path) -> "Lighting":
-        data = yaml.safe_load(Path(path).read_text())
-        try:
-            arms = {int(arm): float(percent) for arm, percent in data["arms"].items()}
-            return cls(arms, bool(data.get("boost", False)))
-        except (AttributeError, KeyError, TypeError) as exc:
-            raise ValueError(f"{path}: not a saved lighting file") from exc

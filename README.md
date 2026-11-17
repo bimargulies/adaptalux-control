@@ -80,29 +80,24 @@ is ever sent to the pod.
 
 ## Turning everything off and back on
 
-`lights_off` switches arms off and remembers how they were; `restore` puts it back.
+`lights_off` switches arms off and returns how they were; `restore` puts that back.
 
 ```python
 saved = await pod.lights_off()  # all five arms to 0 %; returns a Lighting
 ...
-await pod.restore()  # arms and boost as they were
+await pod.restore(saved)  # arms and boost as they were
 ```
 
-`saved` is a `Lighting`: the brightness of arms 1-5 and the boost flag. To come back
-in a later run, keep it in a file:
+`saved` is a `Lighting`: the brightness of arms 1-5 and the boost flag. The library
+keeps nothing itself. You decide whether to hold the object in memory or write it
+out (`dataclasses.asdict(saved)` gives a plain dict).
 
-```python
-saved.save(path)  # then, later, after connecting:
-await pod.restore(Lighting.load(path))
-```
-
-- `lights_off(arms=[1, 2])` turns off only those arms. `restore` still puts all five
-  arms back to the saved levels.
-- Calling `lights_off` again while everything is dark keeps the original; if you
-  changed the lights in between, the new configuration is the one remembered.
-- Boost is left alone by `lights_off` and is restored by `restore`.
-- Flash arm levels can't be read from the pod, so they are not saved.
-- `examples/lights.py off` and `... on` do this across runs.
+- `lights_off(arms=[1, 2])` turns off only those arms. `restore` still sets all five
+  arms to the saved levels.
+- Called again while everything is dark, `lights_off` returns the dark state, so keep
+  the first result.
+- Boost is left alone by `lights_off` and set back by `restore`.
+- Flash arm levels can't be read from the pod, so they are not in a `Lighting`.
 
 ## Boost
 
@@ -188,13 +183,13 @@ the pod last answered; neither raises on its own, but your next command will.
 | `pod.ramp({arm: percent}, duration)` | smooth brightness change |
 | `pod.set_boost(on)`, `await pod.read_boost()`, `pod.boost` | global boost |
 | `pod.set_flash_level(arm, level)` | flash arm power, 1-5 |
-| `pod.lights_off(arms=None)`, `pod.restore(lighting=None)`, `pod.snapshot()` | turn off and restore |
-| `Lighting(arms, boost)`, `.save(path)`, `Lighting.load(path)` | a saved configuration |
+| `await pod.lights_off(arms=None)`, `await pod.restore(lighting)`, `pod.snapshot()` | turn off; put it back |
+| `Lighting(arms, boost)` | a lighting configuration |
 | `pod.wink()` | flash all arms so you can see which pod this is |
 | `pod.arms`, `pod.status_age`, `pod.keepalive_error` | state |
 | `await pod.close()` | end the session |
 | `PodRegistry`, `identify_pods()`, `scan_pods()` | naming pods |
-| exceptions | `PodNotFound`, `UnknownPod` (no such name), `BoostOff`, `NothingToRestore` |
+| exceptions | `PodNotFound`, `UnknownPod` (no such name), `BoostOff` |
 
 ## Protocol
 
@@ -237,5 +232,5 @@ uv run ruff check .
 ```
 
 `examples/` has small scripts that use a real pod: `scan.py` and `status.py` (raw
-Bluetooth), and `set_arms.py`, `ramp.py`, `boost.py`, `flash.py` and `lights.py`, which use the
+Bluetooth), and `set_arms.py`, `ramp.py`, `boost.py` and `flash.py`, which use the
 `Pod` class and take `--label NAME`.
