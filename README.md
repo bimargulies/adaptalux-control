@@ -178,9 +178,11 @@ uv run adaptalux-gui
 Each pod has a section with a Boost switch and, for each arm, an Empty / LED / Flash
 switch with a brightness slider (LED) or power buttons 1-5 (Flash). The Standby button
 at the top turns every LED arm off and, pressed again, puts them back. Flash arms and
-boost are left alone. **File** saves and restores the whole setup to a YAML file;
-**Pods → Identify Pods…** names new pods. Which arms are empty, LED or flash is
-remembered only in saved files, because the pod cannot report it.
+boost are left alone. **File** saves and restores a setup to a YAML file: saving
+includes only the pods you have set up in the window, and restoring touches only the
+pods in the file. **Pods → Identify Pods…** names new pods. The pod cannot report
+which arms are empty, LED or flash, so the window remembers them through the last
+file you saved or restored: at startup it shows those arm modes (and sends nothing).
 
 ## Sessions
 

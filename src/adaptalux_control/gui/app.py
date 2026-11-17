@@ -142,9 +142,13 @@ class ArmRow(QWidget):
 class PodPanel(QGroupBox):
     """One pod: connection, boost, and five arm rows."""
 
-    def __init__(self, label: str, connector: Connector) -> None:
+    def __init__(
+        self, label: str, connector: Connector, initial: PodSetting | None = None
+    ) -> None:
         super().__init__(label)
         self.label = label
+        self._initial = initial  # arm modes remembered from a saved file
+        self.touched = False  # True once the user has configured this pod
         self._connector = connector
         self.pod: Pod | None = None
         self.standby = False
@@ -243,7 +247,22 @@ class PodPanel(QGroupBox):
         self.boost.setChecked(self.pod.boost)
         self.boost.blockSignals(False)
         self._link("connected")
+        self._adopt_initial()
         self._enable()
+
+    def _adopt_initial(self) -> None:
+        """Show the remembered arm modes. Nothing is sent to the pod.
+
+        The pod can't say what is plugged in, so modes and flash levels come from
+        the file; LED brightness and boost come from the pod itself.
+        """
+        initial, self._initial = self._initial, None
+        if initial is None or self.pod is None:
+            return
+        for arm, row in self.rows.items():
+            saved = initial.arms[arm]
+            row.show_setting(ArmSetting(saved.mode, self.pod.arms[arm], saved.level))
+        self.touched = any(a.mode != "empty" for a in initial.arms.values())
 
     def _check_link(self) -> None:
         if self.pod is not None and self.pod.keepalive_error is not None:
@@ -277,6 +296,8 @@ class PodPanel(QGroupBox):
     # -- user actions ---------------------------------------------------------
 
     def _boost_toggled(self, on: bool) -> None:
+        self.touched = True
+
         async def go() -> None:
             async with self._lock:
                 await self.pod.set_boost(on)
@@ -285,6 +306,7 @@ class PodPanel(QGroupBox):
             self._spawn(go())
 
     def _mode_changed(self, arm: int, mode: str) -> None:
+        self.touched = True
         if mode == "empty":
             self._queue_led(arm, 0.0)
         elif mode == "led":
@@ -296,6 +318,7 @@ class PodPanel(QGroupBox):
         self._queue_led(arm, percent)
 
     def _queue_led(self, arm: int, percent: float) -> None:
+        self.touched = True
         if self.pod is None:
             return
         self._pending[arm] = percent
@@ -310,6 +333,8 @@ class PodPanel(QGroupBox):
             await asyncio.sleep(LED_SEND_INTERVAL)
 
     def _flash_chosen(self, arm: int, level: int) -> None:
+        self.touched = True
+
         async def go() -> None:
             async with self._lock:
                 try:
@@ -354,6 +379,7 @@ class PodPanel(QGroupBox):
 
     async def apply(self, setting: PodSetting) -> None:
         """Show ``setting`` and send it: boost and LED levels in one packet, then flash levels."""
+        self.touched = True
         for arm, row in self.rows.items():
             row.show_setting(setting.arms[arm])
         self.boost.blockSignals(True)
@@ -387,6 +413,7 @@ class MainWindow(QMainWindow):
         self,
         registry: PodRegistry | None = None,
         connector: Connector = default_connector,
+        settings: QSettings | None = None,
     ) -> None:
         super().__init__()
         self.setWindowTitle("Adaptalux")
@@ -420,7 +447,8 @@ class MainWindow(QMainWindow):
         outer.addWidget(self.message)
         self.setCentralWidget(central)
         self.resize(400, 820)
-        self._settings = QSettings("adaptalux-control", "gui")
+        self._settings = settings or QSettings("adaptalux-control", "gui")
+        self._startup = self._load_last_configuration()
         if geometry := self._settings.value("geometry"):
             self.restoreGeometry(geometry)
 
@@ -458,12 +486,24 @@ class MainWindow(QMainWindow):
     def refresh_panels(self) -> None:
         for label in sorted(self.registry.pods):
             if label not in self.panels:
-                panel = PodPanel(label, self._connector)
+                panel = PodPanel(label, self._connector, self._startup.get(label))
                 self.panels[label] = panel
                 self.pod_area.addWidget(panel)
                 panel.start()
         if not self.panels:
             self._say("No pods named yet: use Pods → Identify Pods…")
+
+    def _load_last_configuration(self) -> dict[str, PodSetting]:
+        """Arm modes from the file used last time; empty if there is none."""
+        name = self._settings.value("last_config")
+        if not name:
+            return {}
+        try:
+            settings = model.load(Path(name).read_text())
+        except (ValueError, OSError):
+            return {}
+        self._say(f"arm modes from {name}")
+        return settings
 
     def connected(self) -> list[PodPanel]:
         return [p for p in self.panels.values() if p.pod is not None]
@@ -491,9 +531,15 @@ class MainWindow(QMainWindow):
             self, "Save configuration", str(CONFIG_DIR / "lights.yaml"), "YAML (*.yaml)"
         )
         if name:
-            settings = {label: p.setting() for label, p in self.panels.items()}
+            settings = {
+                label: p.setting() for label, p in self.panels.items() if p.touched
+            }
+            if not settings:
+                self._say("nothing to save: no pod has been set up yet")
+                return
             Path(name).write_text(model.dump(settings))
-            self._say(f"saved {name}")
+            self._settings.setValue("last_config", name)
+            self._say(f"saved {name} ({', '.join(sorted(settings))})")
 
     def restore_configuration(self) -> None:
         name, _ = QFileDialog.getOpenFileName(
@@ -517,6 +563,7 @@ class MainWindow(QMainWindow):
                 else:
                     jobs.append(panel.apply(setting))
             await asyncio.gather(*jobs)
+            self._settings.setValue("last_config", name)
             self._say(
                 f"restored {name}"
                 + (f"; not connected, skipped: {', '.join(skipped)}" if skipped else "")

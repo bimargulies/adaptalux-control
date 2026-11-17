@@ -6,10 +6,13 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 pytest.importorskip("PySide6")
 
+from PySide6.QtCore import QSettings
 from PySide6.QtWidgets import QApplication
 from test_pod import FakeClient
 
+from adaptalux_control.gui import model
 from adaptalux_control.gui.app import MainWindow
+from adaptalux_control.gui.model import ArmSetting, PodSetting
 from adaptalux_control.pod import Pod
 from adaptalux_control.registry import PodRegistry
 
@@ -21,8 +24,11 @@ async def settle():
         await asyncio.sleep(0.1)
 
 
-def window():
+def window(tmp_path, last_config=None):
     clients: dict[str, FakeClient] = {}
+    settings = QSettings(str(tmp_path / "gui.ini"), QSettings.Format.IniFormat)
+    if last_config:
+        settings.setValue("last_config", str(last_config))
 
     async def connector(label):
         clients[label] = FakeClient()
@@ -31,12 +37,12 @@ def window():
         return pod
 
     reg = PodRegistry({"fred": "x", "george": "y"})
-    return MainWindow(reg, connector), clients
+    return MainWindow(reg, connector, settings), clients
 
 
-def test_led_slider_sends_and_standby_restores():
+def test_led_slider_sends_and_standby_restores(tmp_path):
     async def go():
-        w, clients = window()
+        w, clients = window(tmp_path)
         await settle()
         fred = w.panels["fred"]
         assert fred.pod is not None
@@ -61,9 +67,9 @@ def test_led_slider_sends_and_standby_restores():
     asyncio.run(go())
 
 
-def test_flash_needs_boost_then_pulses():
+def test_flash_needs_boost_then_pulses(tmp_path):
     async def go():
-        w, clients = window()
+        w, clients = window(tmp_path)
         await settle()
         p = w.panels["george"]
         p.rows[2].mode_buttons["flash"].click()
@@ -76,6 +82,48 @@ def test_flash_needs_boost_then_pulses():
         sevens = [w_ for w_ in clients["george"].writes if w_[0] == 0x77]
         assert 0x8D in [x[1] for x in sevens]
         assert sevens[-1][1] == 0x00 and sevens[-1][-1] == 1
+        for panel in w.panels.values():
+            await panel.close()
+
+    asyncio.run(go())
+
+
+def test_last_configuration_sets_modes_without_sending(tmp_path):
+    saved = PodSetting()
+    saved.arms[1] = ArmSetting("flash", level=3)
+    saved.arms[2] = ArmSetting("led", 70)
+    path = tmp_path / "last.yaml"
+    path.write_text(model.dump({"george": saved}))
+
+    async def go():
+        w, clients = window(tmp_path, path)
+        await settle()
+        george, fred = w.panels["george"], w.panels["fred"]
+        assert george.rows[1].mode == "flash" and george.rows[1].level == 3
+        assert george.rows[2].mode == "led"
+        assert george.rows[2].slider.value() == 50  # brightness comes from the pod
+        assert fred.rows[1].mode == "empty"
+        assert [x for x in clients["george"].writes if x[0] == 0x77] == []
+        for panel in w.panels.values():
+            await panel.close()
+
+    asyncio.run(go())
+
+
+def test_untouched_pods_are_not_saved(tmp_path, monkeypatch):
+    saved_to = tmp_path / "out.yaml"
+    monkeypatch.setattr(
+        "adaptalux_control.gui.app.QFileDialog.getSaveFileName",
+        lambda *a, **k: (str(saved_to), ""),
+    )
+
+    async def go():
+        w, _ = window(tmp_path)
+        await settle()
+        w.panels["fred"].rows[1].mode_buttons["led"].click()
+        w.save_configuration()
+        assert list(model.load(saved_to.read_text())) == ["fred"]
+        assert w._settings.value("last_config") == str(saved_to)
         for panel in w.panels.values():
             await panel.close()
 
