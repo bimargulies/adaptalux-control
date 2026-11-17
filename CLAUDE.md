@@ -178,3 +178,13 @@ No notifications were received in response to the `77` or `24` writes.
 - How to enter flash mode in the iPhone app (worked for the user 2026-11-16, app 1.5.0, Pod 3.0): not automatic.
   Double-tap the flash arm's port -> choose the Flash symbol -> bottom panel switches from the LED-brightness slider
   to presets 1-5; boost turns on by itself. Keep pod power at 100 % for flash ports.
+
+## Flash arm power level, decoded from captures/flash-arm-2-sequence.txt (2026-11-16, george, flash arm in app port 2 = slot byte 0)
+- Choosing flash mode (double-tap) sends NOTHING. Boost was already on (flag 01) the whole time and the arm stays at 100 %.
+- Each level tap sends the SAME three-step pulse on that arm's slot byte, every other byte unchanged, each step written
+  2-3 times (as the app always does): `ff` (0 %) for ~0.2 s -> `8d` (~45 %) for T -> `00` (100 %).
+- The level is the DURATION T of the `8d` step: level 1..5 -> T ~ 0.52, 0.76, 1.03, 1.30, 1.58 s measured from the first
+  `8d` write to the first `00` write (~0.27 s per level; level 3 was 1.05 s in the earlier capture). Same bytes for all levels.
+- Connect sequence with flash arms was the usual `23` (status reply `00 00 80 80 69 01 a3 01 13 01 77`), `24`, then a
+  `77` pair; no extra flash-selection command.
+- NOT yet replayed on hardware. Whether the arm tolerates our BLE timing jitter (~50 ms) is untested.

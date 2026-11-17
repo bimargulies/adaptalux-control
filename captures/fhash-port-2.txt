@@ -1,0 +1,934 @@
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    124 28508.511000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 124: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:36.418000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:36.418000000 UTC
+    Epoch Arrival Time: 1794855516.418000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 148.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 8.511000000 seconds]
+    Frame Number: 124
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 778000ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    125 28508.554000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 125: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:36.461000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:36.461000000 UTC
+    Epoch Arrival Time: 1794855516.461000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 43.000000 milliseconds]
+    [Time delta from previous displayed frame: 43.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 8.554000000 seconds]
+    Frame Number: 125
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 124]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    126 28508.555000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 126: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:36.462000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:36.462000000 UTC
+    Epoch Arrival Time: 1794855516.462000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 1.000000 milliseconds]
+    [Time delta from previous displayed frame: 1.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 8.555000000 seconds]
+    Frame Number: 126
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 778000ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    128 28508.614000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 128: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:36.521000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:36.521000000 UTC
+    Epoch Arrival Time: 1794855516.521000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 30.000000 milliseconds]
+    [Time delta from previous displayed frame: 59.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 8.614000000 seconds]
+    Frame Number: 128
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 126]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    140 28512.263000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 140: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.170000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.170000000 UTC
+    Epoch Arrival Time: 1794855520.170000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 2.000000 milliseconds]
+    [Time delta from previous displayed frame: 3.649000000 seconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.263000000 seconds]
+    Frame Number: 140
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 77ff00ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    142 28512.304000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 142: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.211000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.211000000 UTC
+    Epoch Arrival Time: 1794855520.211000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 23.000000 milliseconds]
+    [Time delta from previous displayed frame: 41.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.304000000 seconds]
+    Frame Number: 142
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 140]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    143 28512.305000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 143: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.212000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.212000000 UTC
+    Epoch Arrival Time: 1794855520.212000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 1.000000 milliseconds]
+    [Time delta from previous displayed frame: 1.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.305000000 seconds]
+    Frame Number: 143
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 77ff00ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    145 28512.364000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 145: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.271000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.271000000 UTC
+    Epoch Arrival Time: 1794855520.271000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 30.000000 milliseconds]
+    [Time delta from previous displayed frame: 59.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.364000000 seconds]
+    Frame Number: 145
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 143]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    146 28512.365000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 146: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.272000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.272000000 UTC
+    Epoch Arrival Time: 1794855520.272000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 1.000000 milliseconds]
+    [Time delta from previous displayed frame: 1.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.365000000 seconds]
+    Frame Number: 146
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 77ff00ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    147 28512.424000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 147: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.331000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.331000000 UTC
+    Epoch Arrival Time: 1794855520.331000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 59.000000 milliseconds]
+    [Time delta from previous displayed frame: 59.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.424000000 seconds]
+    Frame Number: 147
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 146]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    148 28512.474000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 148: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.381000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.381000000 UTC
+    Epoch Arrival Time: 1794855520.381000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 50.000000 milliseconds]
+    [Time delta from previous displayed frame: 50.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.474000000 seconds]
+    Frame Number: 148
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 778d00ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    150 28512.514000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 150: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.421000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.421000000 UTC
+    Epoch Arrival Time: 1794855520.421000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 30.000000 milliseconds]
+    [Time delta from previous displayed frame: 40.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.514000000 seconds]
+    Frame Number: 150
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 148]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    151 28512.515000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 151: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.422000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.422000000 UTC
+    Epoch Arrival Time: 1794855520.422000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 1.000000 milliseconds]
+    [Time delta from previous displayed frame: 1.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.515000000 seconds]
+    Frame Number: 151
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 778d00ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    153 28512.634000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 153: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:40.541000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:40.541000000 UTC
+    Epoch Arrival Time: 1794855520.541000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 75.000000 milliseconds]
+    [Time delta from previous displayed frame: 119.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 12.634000000 seconds]
+    Frame Number: 153
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 151]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    158 28513.520000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 158: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:41.427000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:41.427000000 UTC
+    Epoch Arrival Time: 1794855521.427000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 59.000000 milliseconds]
+    [Time delta from previous displayed frame: 886.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 13.520000000 seconds]
+    Frame Number: 158
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 770000ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    159 28513.564000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 159: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:41.471000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:41.471000000 UTC
+    Epoch Arrival Time: 1794855521.471000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 44.000000 milliseconds]
+    [Time delta from previous displayed frame: 44.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 13.564000000 seconds]
+    Frame Number: 159
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 158]
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    160 28513.565000   localhost ()          remote ()             ATT      19                Sent Write Request, Handle: 0x0055 (Unknown)
+
+Frame 160: Packet, 19 bytes on wire (152 bits), 19 bytes captured (152 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:41.472000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:41.472000000 UTC
+    Epoch Arrival Time: 1794855521.472000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 1.000000 milliseconds]
+    [Time delta from previous displayed frame: 1.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 13.565000000 seconds]
+    Frame Number: 160
+    Frame Length: 19 bytes (152 bits)
+    Capture Length: 19 bytes (152 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Sent ACL Data
+    Type: Sent ACL Data (0x02)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..00 .... .... .... = PB Flag: First Non-automatically Flushable Packet (0)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 14
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 10
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Request (0x12)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0010 = Method: Write Request (0x12)
+    Handle: 0x0055 (Unknown)
+    Value: 770000ffff6901
+
+No.     Time           Source                Destination           Protocol Length Tag        Info
+    162 28513.624000   remote ()             localhost ()          ATT      10                Rcvd Write Response, Handle: 0x0055 (Unknown)
+
+Frame 162: Packet, 10 bytes on wire (80 bits), 10 bytes captured (80 bits)
+    Encapsulation type: Apple Bluetooth PacketLogger (118)
+    Arrival Time: Nov 16, 2026 13:58:41.531000000 EST
+    UTC Arrival Time: Nov 16, 2026 18:58:41.531000000 UTC
+    Epoch Arrival Time: 1794855521.531000000
+    [Time shift for this packet: 0.000000000 seconds]
+    [Time delta from previous captured frame: 30.000000 milliseconds]
+    [Time delta from previous displayed frame: 59.000000 milliseconds]
+    [Time since reference or first frame: 7 hours, 55 minutes, 13.624000000 seconds]
+    Frame Number: 162
+    Frame Length: 10 bytes (80 bits)
+    Capture Length: 10 bytes (80 bits)
+    [Frame is marked: False]
+    [Frame is ignored: False]
+    [Protocols in frame: bluetooth:packetlogger:bthci_acl:btl2cap:btatt]
+    Character encoding: ASCII (0)
+Bluetooth
+    [Source: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+PacketLogger Recv ACL Data
+    Type: Recv ACL Data (0x03)
+Bluetooth HCI ACL Packet
+    .... 0100 0000 0100 = Connection Handle: 0x404
+    ..10 .... .... .... = PB Flag: First Automatically Flushable Packet (2)
+    00.. .... .... .... = BC Flag: Point-To-Point (0)
+    Data Total Length: 5
+    Data
+    [Expert Info (Error/Protocol): Frame is out of any "connection handle" session]
+        [Frame is out of any "connection handle" session]
+        [Severity level: Error]
+        [Group: Protocol]
+    [Source BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Source Device Name: ]
+    [Source Role: Unknown (0)]
+    [Destination BD_ADDR: 00:00:00_00:00:00 (00:00:00:00:00:00)]
+    [Destination Device Name: ]
+    [Destination Role: Unknown (0)]
+    [Current Mode: Unknown (-1)]
+Bluetooth L2CAP Protocol
+    Length: 1
+    CID: Attribute Protocol (0x0004)
+Bluetooth Attribute Protocol
+    Opcode: Write Response (0x13)
+        0... .... = Authentication Signature: False
+        .0.. .... = Command: False
+        ..01 0011 = Method: Write Response (0x13)
+    [Handle: 0x0055 (Unknown)]
+    [Request in Frame: 160]
