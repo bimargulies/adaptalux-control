@@ -222,7 +222,11 @@ other bytes are not used.
 unchanged: `ff` for about 0.2 s, then `8d` for a time that sets the level, then `00`.
 The time from the first `8d` write to the first `00` write is 0.52, 0.76, 1.03,
 1.30 and 1.58 s for levels 1 to 5. Choosing flash mode in the iPhone app sends
-nothing by itself. The iPhone traces this was decoded from are in `captures/`.
+nothing by itself. The Bluetooth traces from the iPhone app that this was decoded from are in `captures/`.
+
+## License
+
+MIT; see [LICENSE](LICENSE).
 
 ## Development
 
