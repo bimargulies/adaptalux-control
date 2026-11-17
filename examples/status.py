@@ -1,4 +1,7 @@
-"""Connect, enable notify on TX, send 0x23, print every write/notification."""
+"""Send the status request (23) twice and print every write and notification.
+
+A low-level look at the raw reply, without using the Pod class.
+"""
 
 import asyncio
 import time

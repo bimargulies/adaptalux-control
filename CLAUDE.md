@@ -134,14 +134,14 @@ No notifications were received in response to the `77` or `24` writes.
   (bit 7 clear) also leaves it lit. Needs an app capture of the arm on/off toggle.
 - Not yet tested: upper level range; `77` without `24`;
   other ports; last byte of `77`.
-- Scripts: experiments/00_scan.py, 01_status.py, 02_wiggle.py [ports],
-  03_ramp_down.py and 04_sweep.py (both write port 1 only: need a port arg).
+- Scripts: the exploration scripts that were in `experiments/` (00-12) have been removed from the tree; they are in git
+  history (last present in commit dc567dc). Current scripts are in `examples/`; user-facing docs are in README.md.
 
 ## Protocol decoded from the 5-arm captures (2026-11-16) — supersedes hypotheses above
 - Slot bytes are INVERTED: `0xFF` = 0 % (off), `0x80` = 50 %, `0x40` = 75 %, `0x00` = 100 %
   (byte = 256*(100-pct)/100, clamped to 255). `0xFF` is NOT "leave unchanged"; every `77`
   packet sets all five slots. This explains "OFF NOT FOUND" and the "0x80|level" hypothesis
-  being wrong (`adaptalux.brightness_cmd` is based on it and is wrong).
+  being wrong (the old `brightness_cmd` helper was based on it and has been removed).
 - Last byte of `77 ... FLAG` = boost switch (01 on, 00 off). Boost is a single GLOBAL flag for the whole pod
   (not per arm); it brightens all arms at every level.
 - App arm order -> slot byte: arm1=byte1, arm2=byte0, arm3=byte3, arm4=byte4 (verified from

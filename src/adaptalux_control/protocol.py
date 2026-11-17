@@ -1,7 +1,6 @@
 """Pure encoding/decoding for the Adaptalux Control Pod wire protocol.
 
-No Bluetooth here, so everything is unit-testable. See CLAUDE.md for how this
-was derived from iPhone-app captures.
+No Bluetooth here, so everything is unit-testable.
 
 Control packet, written to the RX characteristic:
 
@@ -9,35 +8,41 @@ Control packet, written to the RX characteristic:
 
 * ``c0..c4`` are the five arm slots, one byte each. The byte is INVERTED:
   0xFF = 0 % (off), 0x80 = 50 %, 0x40 = 75 %, 0x00 = 100 %. Every packet sets
-  all five slots; there is no "leave unchanged" value (an unused slot simply
-  sits at 0xFF).
-* ``FLAG`` is the *boost* switch: 0x01 on, 0x00 off. Boost is a single GLOBAL
-  flag for the whole pod, not per arm: it brightens every arm, at every level.
+  all five slots; there is no "leave unchanged" value.
+* ``FLAG`` is the global boost switch: 0x01 on, 0x00 off. It applies to every
+  arm at once.
 
-The status reply to ``23`` is 11 bytes; its first five bytes are the five slot
-bytes in the same encoding (0x80 = 50 % on a freshly powered pod). Byte 9 is the
-global boost flag (see ``status_boost``).
+Slot byte -> arm number (arm numbers are the iPhone app's layout, looking at the
+pod's holes: arms 1 and 2 on the top row, 3, 4 and 5 on the bottom row):
+
+    arm 1 = c1   arm 2 = c0
+    arm 3 = c3   arm 4 = c4   arm 5 = c2
+
+Flash arms (Gen 2) take their power level (1-5) as a timed pulse on the arm's
+slot byte instead of a byte value; see ``FLASH_LEVEL_SECONDS``.
+
+The status reply to ``23`` is 11 bytes and may arrive split over several
+notifications. Its first five bytes are the slot bytes in the same encoding
+(an empty port reports 0x80). Byte 9 is the boost flag. The other bytes are not
+decoded.
 """
 
 from collections.abc import Mapping, Sequence
 
 HEADER = 0x77
-
-# Flash arm (Gen 2) power level 1..5, decoded from captures/flash-arm-2-sequence.txt.
-# The level is not a byte value: the arm's slot byte is pulsed 0xFF (~0.2 s) ->
-# FLASH_PULSE_BYTE for a level-dependent time -> 0x00 (100 %). Seconds from the first
-# pulse write to the first 0x00 write, as the iPhone app does it.
-FLASH_PULSE_BYTE = 0x8D
-FLASH_LEVEL_SECONDS = {1: 0.52, 2: 0.76, 3: 1.03, 4: 1.30, 5: 1.58}
 SLOT_COUNT = 5
 PACKET_LEN = 7
 STATUS_LEN = 11
-STATUS_BOOST_INDEX = 9  # 00 = boost off, 01 = boost on (verified by toggling it)
+STATUS_BOOST_INDEX = 9  # 00 = boost off, 01 = boost on
 
-# App arm number (1-based, in the order the iPhone app lays them out: arms 1-2
-# on the top row, 3-5 on the bottom row) -> index of its slot byte within the
-# five slot bytes. Arms 1-4 come from the "four-arms" capture; all five were
-# verified by driving real arms (arm 5 -> byte 2: the empty bottom-row slot).
+# Flash arm power level 1..5. The arm's slot byte is pulsed: 0xFF (about 0.2 s), then
+# FLASH_PULSE_BYTE for a level-dependent time, then 0x00 (100 %, where flash arms
+# must be left). FLASH_LEVEL_SECONDS is that time, from the first pulse write to
+# the first 0x00 write. Each step is written two or three times, as the app does.
+FLASH_PULSE_BYTE = 0x8D
+FLASH_LEVEL_SECONDS = {1: 0.52, 2: 0.76, 3: 1.03, 4: 1.30, 5: 1.58}
+
+# App arm number (1-based) -> index of its slot byte within the five slot bytes.
 ARM_TO_SLOT = {1: 1, 2: 0, 3: 3, 4: 4, 5: 2}
 
 

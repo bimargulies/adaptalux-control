@@ -1,4 +1,4 @@
-"""Async client for the Adaptalux Control Pod, built on bleak."""
+"""Async client for the Adaptalux Control Pod 3.0, built on bleak."""
 
 import asyncio
 import logging
@@ -44,25 +44,32 @@ class BoostOff(ValueError):
 
 
 class Pod:
-    """Control a pod. A ``Pod`` is a session: from ``connect`` until ``close``.
+    """A session with one pod, from ``connect`` until ``close``.
 
-    While the session is open it asks the pod for its status every
-    ``keepalive_interval`` seconds (default 30; ``None`` turns this off), in
-    case the pod drops idle links or stops advertising. ``status_age`` says how
-    long ago the pod last answered, and ``keepalive_error`` holds the exception
-    if a keepalive write failed (usually: the link is gone).
+        async with await Pod.connect(label="bench") as pod:
+            await pod.set_arms({1: 25, 2: 50})
+            await pod.ramp({1: 0}, duration=2)
+            await pod.set_boost(True)
+            await pod.set_flash_level(2, 3)
 
-    Close the iPhone app first (the pod takes one central at a time) and put
-    the pod in Bluetooth mode (hold its top button until the blue light
+    Before connecting, close the iPhone app (a pod talks to one device at a time)
+    and put the pod in Bluetooth mode (hold its top button until the blue light
     flashes).
 
-        async with await Pod.connect() as pod:
-            await pod.set_arms({1: 25, 2: 50, 3: 75, 4: 100})
-            await pod.ramp({1: 0}, duration=2)
+    Arms are numbered 1-5 as in the iPhone app (see ``protocol``). Brightness is
+    0-100 %; anything outside that raises ValueError and is never sent. The pod
+    can't be told to leave an arm unchanged, so this object remembers every
+    arm's level (adopted from the pod when you connect) and resends all five each
+    time. Unplugged arms report 50 %; that value is sent back to them harmlessly.
 
-    Arms are numbered 1-5 in the iPhone app's layout order; percentages are
-    0-100; anything outside that raises ValueError and is never sent. The pod has no "leave unchanged" value, so this object remembers the
-    level of every arm and resends all five each time.
+    Boost is a single global flag that brightens every arm. It is adopted from the
+    pod at connect, so ordinary commands preserve it; ``read_boost`` re-reads it.
+
+    While the session is open it asks the pod for its status every
+    ``keepalive_interval`` seconds (default 30; ``None`` turns this off).
+    ``status_age`` is the time since the pod last answered, and
+    ``keepalive_error`` holds the exception if a keepalive write failed, which
+    usually means the link is gone.
     """
 
     def __init__(
@@ -88,19 +95,19 @@ class Pod:
     async def connect(
         cls,
         *,
-        name: str = DEVICE_NAME,
         address: str | None = None,
         label: str | None = None,
         registry_path: Path | None = None,
         timeout: float = 10.0,
         keepalive_interval: float | None = KEEPALIVE_S,
     ) -> Self:
-        """Find the pod.
+        """Find a pod and open a session.
 
-        By ``label`` (looked up in this Mac's pod registry, see
-        :mod:`adaptalux_control.registry`), else by ``address``, else the first
-        pod found by name or service UUID. With two pods advertising, use a
-        label: the unlabelled form could pick either.
+        Pick the pod by ``label`` (from this Mac's pod registry, see
+        :mod:`adaptalux_control.registry`), by ``address``, or neither to take the
+        first pod found. With more than one pod advertising, use a label: the
+        unlabelled form could pick either. Raises PodNotFound if it is not seen
+        within ``timeout`` seconds.
         """
         from bleak import BleakClient, BleakScanner
 
@@ -114,7 +121,7 @@ class Pod:
         else:
             device = await BleakScanner.find_device_by_filter(
                 lambda d, adv: (
-                    d.name == name or SERVICE_UUID in (adv.service_uuids or [])
+                    d.name == DEVICE_NAME or SERVICE_UUID in (adv.service_uuids or [])
                 ),
                 timeout=timeout,
             )
@@ -134,7 +141,7 @@ class Pod:
             self._keepalive_task = asyncio.create_task(self._keepalive_loop())
 
     async def _handshake(self) -> None:
-        """Same opening as the app: 23 (status), then 24."""
+        """Open like the iPhone app: 23 (status), then 24."""
         await self._write(CMD_STATUS)
         try:
             await asyncio.wait_for(self._status_ready.wait(), timeout=2.0)
@@ -143,28 +150,9 @@ class Pod:
             if self._status_boost is not None:
                 self._boost = self._status_boost  # and its boost, so we don't flip it
         except TimeoutError:
-            pass  # keep all-zero assumption
+            pass  # no answer: assume all arms off, boost off
         await self._write(CMD_START)
         await self._write(CMD_START)
-
-    async def wink(self, times: int = 3, on: float = 0.35, off: float = 0.25) -> None:
-        """Flash all arms so a person can see which pod this is.
-
-        Only arms that are plugged in will visibly light. Levels are restored
-        afterwards; the boost flag is not touched.
-        """
-        saved = list(self._slots)
-        try:
-            for _ in range(times):
-                self._slots = [100.0] * SLOT_COUNT
-                await self._send_state()
-                await asyncio.sleep(on)
-                self._slots = [0.0] * SLOT_COUNT
-                await self._send_state()
-                await asyncio.sleep(off)
-        finally:
-            self._slots = saved
-            await self._send_state()
 
     async def close(self) -> None:
         task, self._keepalive_task = self._keepalive_task, None
@@ -189,7 +177,7 @@ class Pod:
 
     @property
     def arms(self) -> dict[int, float]:
-        """Last known percentage of each arm, {1: .., ..., 5: ..}."""
+        """Last known brightness of each arm in percent, {1: ..., ..., 5: ...}."""
         return slot_percents_to_arms(self._slots)
 
     @property
@@ -201,7 +189,7 @@ class Pod:
 
     @property
     def boost(self) -> bool:
-        """Global boost flag (pod-wide, not per arm)."""
+        """Last known state of the global boost flag."""
         return self._boost
 
     # -- commands -----------------------------------------------------------
@@ -221,18 +209,18 @@ class Pod:
         await self._send_state()
 
     async def set_flash_level(self, arm: int, level: int) -> None:
-        """Set a Gen 2 flash arm's power level (1-5), as the iPhone app does.
+        """Set a Gen 2 flash arm's power level, 1 (shortest flash) to 5 (most power).
 
-        The level is sent as a timed pulse on the arm's slot (see
-        ``protocol.FLASH_PULSE_BYTE``), and the arm's port is left at 100 %
-        power, which flash arms need; you do not set that yourself. Boost must
-        be on, and this checks the pod's actual boost state first: it raises
-        :class:`BoostOff` (a ValueError) without sending a pulse if boost is
-        off. Turn it on with ``set_boost(True)``. The call returns once the pulse is sent; the arm then
-        charges to the new level; small changes show up almost at once, but a
-        big jump up (seen: 2 -> 5) took up to about a minute, with the arm's
-        LEDs climbing meanwhile. Do not use this on LED arms. Raises ValueError, sending
-        nothing, for a bad arm or level or if boost is off.
+        The level is sent as a timed pulse on the arm's slot, and the arm's port is
+        left at 100 % power, which flash arms need; you do not set that yourself.
+        Flash arms also need boost: this reads the pod's actual boost state first
+        and raises :class:`BoostOff` without sending anything if it is off (turn it
+        on with ``set_boost(True)``). Also raises ValueError for a bad arm or level.
+
+        Returns once the pulse is sent; the arm's lights then show it reaching the
+        level, which is near-instant for small changes but can take up to about a
+        minute for a big jump up. The pod cannot report a flash arm's level, so
+        remember what you set. Do not use this on LED arms.
         """
         if arm not in ARM_TO_SLOT:
             raise ValueError(f"no such arm {arm}; arms are 1-{SLOT_COUNT}")
@@ -259,19 +247,38 @@ class Pod:
         await send(0x00, 2)
 
     async def set_all(self, percent: float) -> None:
+        """Set all five arms to the same brightness."""
         await self.set_arms({arm: percent for arm in ARM_TO_SLOT})
 
+    async def wink(self, times: int = 3, on: float = 0.35, off: float = 0.25) -> None:
+        """Flash all arms so a person can see which pod this is.
+
+        Only plugged-in arms visibly light. Levels are restored afterwards and the
+        boost flag is not touched. Do not use this with flash arms plugged in.
+        """
+        saved = list(self._slots)
+        try:
+            for _ in range(times):
+                self._slots = [100.0] * SLOT_COUNT
+                await self._send_state()
+                await asyncio.sleep(on)
+                self._slots = [0.0] * SLOT_COUNT
+                await self._send_state()
+                await asyncio.sleep(off)
+        finally:
+            self._slots = saved
+            await self._send_state()
+
     async def set_boost(self, on: bool) -> None:
-        """Turn the global boost on/off; it brightens all arms at once."""
+        """Turn the global boost on or off. It affects every arm at once."""
         self._boost = on
         await self._send_state()
 
     async def read_boost(self, timeout: float = 2.0) -> bool:
         """Ask the pod whether boost is on, and remember the answer.
 
-        The pod reports boost in its status reply, so this also notices someone
-        pressing the pod's own boost control. Raises TimeoutError if the pod
-        does not answer.
+        This notices boost being changed at the pod itself. Raises TimeoutError if
+        the pod does not answer.
         """
         waiter = asyncio.get_running_loop().create_future()
         self._status_waiter = waiter
@@ -290,9 +297,10 @@ class Pod:
         duration: float = 1.0,
         step: float = RAMP_STEP_S,
     ) -> None:
-        """Move the given arms linearly to their targets over `duration` s.
+        """Move arms linearly to their target brightness over ``duration`` seconds.
 
-        Targets outside 0..100 % raise ValueError before anything is sent.
+        Targets outside 0..100 % raise ValueError before anything is sent. Do not
+        use this on flash arms.
         """
         for arm, target in targets.items():
             if arm not in ARM_TO_SLOT:
