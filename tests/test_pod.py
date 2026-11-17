@@ -3,7 +3,8 @@ import asyncio
 import pytest
 
 from adaptalux_control.adaptalux import CMD_START, CMD_STATUS, RX_UUID
-from adaptalux_control.pod import BoostOff, Pod
+from adaptalux_control.lighting import Lighting
+from adaptalux_control.pod import BoostOff, NothingToRestore, Pod
 
 
 class FakeClient:
@@ -229,3 +230,66 @@ def test_flash_level_checks_the_pods_real_boost():
         assert len([w for w in c.writes if w[0] == 0x77]) == n  # no pulse sent
 
     asyncio.run(go())
+
+
+def test_lights_off_and_restore():
+    async def go():
+        pod, c = await make()
+        await pod.set_arms({1: 25, 2: 80})
+        await pod.set_boost(True)
+        saved = await pod.lights_off()
+        assert saved.arms[1] == 25 and saved.arms[2] == 80 and saved.boost
+        assert c.writes[-1].hex() == "77ffffffffff01"  # all dark, boost untouched
+        assert pod.saved_lighting == saved
+        await pod.restore()
+        assert pod.arms[1] == pytest.approx(25, abs=0.5)
+        assert pod.arms[2] == pytest.approx(80, abs=0.5)
+        assert pod.boost and pod.saved_lighting is None
+
+    asyncio.run(go())
+
+
+def test_lights_off_twice_keeps_the_original():
+    async def go():
+        pod, _ = await make()
+        await pod.set_arms({1: 40})
+        first = await pod.lights_off()
+        again = await pod.lights_off()  # already dark: must not save the dark state
+        assert again == first and first.arms[1] == 40
+        await pod.set_arms({1: 70})  # lights changed while "off"
+        newer = await pod.lights_off()
+        assert newer.arms[1] == 70
+
+    asyncio.run(go())
+
+
+def test_lights_off_some_arms_and_refusals():
+    async def go():
+        pod, c = await make()
+        await pod.set_all(60)
+        await pod.lights_off([2])
+        assert pod.arms[2] == 0 and pod.arms[1] == pytest.approx(60, abs=0.5)
+        n = len(c.writes)
+        with pytest.raises(ValueError):
+            await pod.lights_off([9])
+        with pytest.raises(NothingToRestore):
+            fresh, _ = await make()
+            await fresh.restore()
+        assert len(c.writes) == n
+
+    asyncio.run(go())
+
+
+def test_restore_explicit_lighting_and_file(tmp_path):
+    async def go():
+        pod, _ = await make()
+        path = tmp_path / "x" / "lights.yaml"
+        Lighting({1: 10, 2: 20, 3: 30, 4: 40, 5: 50}, boost=True).save(path)
+        await pod.restore(Lighting.load(path))
+        assert pod.arms[3] == pytest.approx(30, abs=0.5) and pod.boost
+
+    asyncio.run(go())
+    with pytest.raises(ValueError):
+        Lighting({1: 10}, False)  # needs all five arms
+    with pytest.raises(ValueError):
+        Lighting({a: 101 for a in range(1, 6)}, False)  # never above 100 %
