@@ -204,3 +204,8 @@ No notifications were received in response to the `77` or `24` writes.
 - Lowering works (2026-11-16): level 1 sent to arm 2 while it was at 4 -> it blinked and landed at 1 (quickly).
   Status reply `23` is identical before/after a flash level change (`00 00 80 80 80 01 b0 01 03 01 77`), so the
   pod does NOT report flash levels; our code must remember the last level it set (and the app/arm can change it).
+- All five levels verified on arm 2 (2026-11-16): 1, 2, 3, 4, 5 each landed on the right LED count, the other arm
+  unchanged. CORRECTION on settling time: small/low changes (1->2, 2->3, 4->1, ->4) showed up essentially instantly
+  per the user; only the left arm's 2->5 jump showed 4 for a while before 5. So the charging delay is real but
+  not general (maybe large upward jumps / level 5); don't assume a fixed wait. The early odd readings remain
+  not fully explained (arm mix-ups are the main suspect).

@@ -219,8 +219,9 @@ class Pod:
         flash arms need. Boost must already be on (``set_boost(True)``): a Pod
         assumes boost is off until told otherwise, and flash arms do not charge
         without it. The call returns once the pulse is sent; the arm then
-        charges to the new level, which can take up to about a minute (the
-        arm's LEDs show it climbing). Do not use this on LED arms. Raises ValueError, sending
+        charges to the new level; small changes show up almost at once, but a
+        big jump up (seen: 2 -> 5) took up to about a minute, with the arm's
+        LEDs climbing meanwhile. Do not use this on LED arms. Raises ValueError, sending
         nothing, for a bad arm or level or if boost is off.
         """
         if arm not in ARM_TO_SLOT:
