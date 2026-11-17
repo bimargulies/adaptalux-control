@@ -75,3 +75,16 @@ def test_identify_flow(tmp_path, monkeypatch):
         "studio": "CCC",
         "old": "DDD",
     }
+
+
+def test_str_subclass_address_saves(tmp_path):
+    # bleak on macOS returns addresses as objc.pyobjc_unicode, a str subclass.
+    class FakeObjcStr(str):
+        pass
+
+    reg = PodRegistry(path=tmp_path / "pods.yaml")
+    reg.add("fred", FakeObjcStr("4208732D-47D9-1A99-83FC-591CAB731BB5"))
+    reg.save()
+    assert PodRegistry.load(tmp_path / "pods.yaml").address("fred") == (
+        "4208732D-47D9-1A99-83FC-591CAB731BB5"
+    )

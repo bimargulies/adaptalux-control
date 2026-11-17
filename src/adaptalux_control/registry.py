@@ -75,6 +75,9 @@ class PodRegistry:
 
     def add(self, label: str, address: str) -> None:
         """Record a label. A label can only point at one pod, and vice versa."""
+        # bleak on macOS hands out addresses as objc.pyobjc_unicode (a str
+        # subclass) that yaml.safe_dump refuses; store plain str.
+        label, address = str(label), str(address)
         if not label.strip():
             raise ValueError("label must not be empty")
         if label in self.pods and self.pods[label] != address:
@@ -95,7 +98,7 @@ async def scan_pods(timeout: float = 10.0) -> list[str]:
 
     found = await BleakScanner.discover(timeout=timeout, return_adv=True)
     return [
-        dev.address
+        str(dev.address)
         for dev, adv in found.values()
         if dev.name == DEVICE_NAME or SERVICE_UUID in (adv.service_uuids or [])
     ]

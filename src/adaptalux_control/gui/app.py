@@ -2,6 +2,7 @@
 
 import asyncio
 import sys
+import traceback
 from collections.abc import Awaitable, Callable
 from functools import partial
 from pathlib import Path
@@ -481,6 +482,7 @@ class MainWindow(QMainWindow):
 
     def _job_done(self, task: asyncio.Future) -> None:
         if not task.cancelled() and (exc := task.exception()):
+            traceback.print_exception(exc, file=sys.stderr)
             self._say(f"{type(exc).__name__}: {exc}")
 
     def refresh_panels(self) -> None:
