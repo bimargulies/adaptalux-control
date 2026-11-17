@@ -35,10 +35,12 @@ can't be found, put it in Bluetooth mode again.
 import asyncio
 from adaptalux_control import Pod
 
+
 async def main():
     async with await Pod.connect() as pod:
-        await pod.set_arms({1: 25, 2: 50})   # arm number -> percent
+        await pod.set_arms({1: 25, 2: 50})  # arm number -> percent
         await pod.ramp({1: 100}, duration=2)
+
 
 asyncio.run(main())
 ```
@@ -67,10 +69,10 @@ effect.
 ## Brightness
 
 ```python
-await pod.set_arms({1: 25, 3: 80})     # only these change
-await pod.set_all(0)                   # everything off
-await pod.ramp({2: 100}, duration=1.5) # smooth change
-print(pod.arms)                        # {1: 25.0, 2: 100.0, ...}
+await pod.set_arms({1: 25, 3: 80})  # only these change
+await pod.set_all(0)  # everything off
+await pod.ramp({2: 100}, duration=1.5)  # smooth change
+print(pod.arms)  # {1: 25.0, 2: 100.0, ...}
 ```
 
 Values outside 0-100 raise `ValueError` and nothing is sent. Nothing above 100 %
@@ -83,7 +85,7 @@ when you connect, so ordinary commands leave it as it was.
 
 ```python
 await pod.set_boost(True)
-on = await pod.read_boost()   # asks the pod, so it also sees changes made at the pod
+on = await pod.read_boost()  # asks the pod, so it also sees changes made at the pod
 ```
 
 ## Flash arms
@@ -93,7 +95,7 @@ power):
 
 ```python
 await pod.set_boost(True)
-await pod.set_flash_level(2, 3)    # arm 2, level 3
+await pod.set_flash_level(2, 3)  # arm 2, level 3
 ```
 
 - Boost must be on. `set_flash_level` reads the pod's real boost state and raises
