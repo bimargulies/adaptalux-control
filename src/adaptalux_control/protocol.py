@@ -21,6 +21,13 @@ bytes in the same encoding (0x80 = 50 % on a freshly powered pod).
 from collections.abc import Mapping, Sequence
 
 HEADER = 0x77
+
+# Flash arm (Gen 2) power level 1..5, decoded from captures/flash-arm-2-sequence.txt.
+# The level is not a byte value: the arm's slot byte is pulsed 0xFF (~0.2 s) ->
+# FLASH_PULSE_BYTE for a level-dependent time -> 0x00 (100 %). Seconds from the first
+# pulse write to the first 0x00 write, as the iPhone app does it.
+FLASH_PULSE_BYTE = 0x8D
+FLASH_LEVEL_SECONDS = {1: 0.52, 2: 0.76, 3: 1.03, 4: 1.30, 5: 1.58}
 SLOT_COUNT = 5
 PACKET_LEN = 7
 STATUS_LEN = 11

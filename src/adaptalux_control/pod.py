@@ -17,6 +17,8 @@ from .adaptalux import (
 )
 from .protocol import (
     ARM_TO_SLOT,
+    FLASH_LEVEL_SECONDS,
+    FLASH_PULSE_BYTE,
     SLOT_COUNT,
     StatusReassembler,
     check_percent,
@@ -208,6 +210,40 @@ class Pod:
         for arm, percent in levels.items():
             self._slots[ARM_TO_SLOT[arm]] = percent
         await self._send_state()
+
+    async def set_flash_level(self, arm: int, level: int) -> None:
+        """Set a Gen 2 flash arm's power level (1-5), as the iPhone app does.
+
+        The level is sent as a timed pulse on the arm's slot (see
+        ``protocol.FLASH_PULSE_BYTE``), then the arm is left at 100 %, which
+        flash arms need. Boost must already be on (``set_boost(True)``): a Pod
+        assumes boost is off until told otherwise, and flash arms do not charge
+        without it. Do not use this on LED arms. Raises ValueError, sending
+        nothing, for a bad arm or level or if boost is off.
+        """
+        if arm not in ARM_TO_SLOT:
+            raise ValueError(f"no such arm {arm}; arms are 1-{SLOT_COUNT}")
+        if level not in FLASH_LEVEL_SECONDS:
+            raise ValueError(f"flash level must be 1-5, got {level!r}")
+        if not self._boost:
+            raise ValueError("flash arms need boost: call set_boost(True) first")
+        index = 1 + ARM_TO_SLOT[arm]  # position of the arm's byte in the packet
+
+        async def send(byte: int, times: int) -> None:
+            packet = bytearray(encode_slots(self._slots, self._boost))
+            packet[index] = byte
+            for _ in range(times):
+                await self._write(bytes(packet))
+
+        loop = asyncio.get_running_loop()
+        await send(0xFF, 3)
+        pulse_start = loop.time()
+        await send(FLASH_PULSE_BYTE, 2)
+        await asyncio.sleep(
+            max(0.0, pulse_start + FLASH_LEVEL_SECONDS[level] - loop.time())
+        )
+        self._slots[ARM_TO_SLOT[arm]] = 100.0
+        await send(0x00, 2)
 
     async def set_all(self, percent: float) -> None:
         await self.set_arms({arm: percent for arm in ARM_TO_SLOT})

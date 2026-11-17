@@ -188,3 +188,11 @@ No notifications were received in response to the `77` or `24` writes.
 - Connect sequence with flash arms was the usual `23` (status reply `00 00 80 80 69 01 a3 01 13 01 77`), `24`, then a
   `77` pair; no extra flash-selection command.
 - NOT yet replayed on hardware. Whether the arm tolerates our BLE timing jitter (~50 ms) is untested.
+- REPLAYED on hardware 2026-11-16 (`Pod.set_flash_level(arm, level)`, george, arm 2 = slot byte 0): level 5 and level 4
+  gave the expected number of red LEDs on the arm, level 4 "more or less instantly". Our write timing matched the
+  app's (level 4 pulse 1.29 s vs 1.30 s; 60 ms between packets). The app itself is fast and reliable on the same arms.
+- Earlier attempts were confusing (levels 3, 3, 2 gave unclear/odd counts; right arm once showed 1 after a level-4
+  command). Causes unproven: the observer mixed up which arm was which, and/or the arms were still loading from a
+  previous pulse. Packets for empty ports (`80 80 80` vs the app's `ff ff 69`) are NOT the cause (level 4 worked with 80s).
+- Status byte 5 = boost flag (01 on). Byte 6 (0xb2 = 178 = 69.8 %) may be battery but the app said 65 %; unproven.
+- Pod 3.0 on the charger all along, so low battery is not the explanation for odd flash levels.

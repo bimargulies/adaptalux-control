@@ -151,3 +151,39 @@ def test_keepalive_can_be_disabled():
         await pod.close()
 
     asyncio.run(go())
+
+
+def test_flash_level_sequence(monkeypatch):
+    monkeypatch.setattr(
+        "adaptalux_control.pod.FLASH_LEVEL_SECONDS",
+        {1: 0.0, 2: 0.0, 3: 0.0, 4: 0.0, 5: 0.0},
+    )
+
+    async def go():
+        pod, c = await make()
+        await pod.set_boost(True)
+        n = len(c.writes)
+        await pod.set_flash_level(2, 3)  # app arm 2 = wire byte 0 = packet[1]
+        seq = c.writes[n:]
+        assert [p[1] for p in seq] == [0xFF] * 3 + [0x8D] * 2 + [0x00] * 2
+        assert all(p[2:] == seq[0][2:] for p in seq)  # other slots and boost unchanged
+        assert all(p[-1] == 1 for p in seq)
+        assert pod.arms[2] == 100
+
+    asyncio.run(go())
+
+
+def test_flash_level_refusals():
+    async def go():
+        pod, c = await make()
+        n = len(c.writes)
+        with pytest.raises(ValueError):
+            await pod.set_flash_level(2, 3)  # boost off
+        await pod.set_boost(True)
+        n = len(c.writes)
+        for arm, level in ((9, 3), (2, 0), (2, 6), (2, 2.5)):
+            with pytest.raises(ValueError):
+                await pod.set_flash_level(arm, level)
+        assert len(c.writes) == n
+
+    asyncio.run(go())
