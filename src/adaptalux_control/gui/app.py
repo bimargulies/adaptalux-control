@@ -158,6 +158,7 @@ class PodPanel(QGroupBox):
         self._pending: dict[int, float] = {}
         self._flusher: asyncio.Future | None = None
         self._tasks: set[asyncio.Future] = set()
+        self._lost = False  # the link dropped; the next successful connect says so
 
         layout = QVBoxLayout(self)
         top = QHBoxLayout()
@@ -209,11 +210,15 @@ class PodPanel(QGroupBox):
     def _finished(self, task: asyncio.Future) -> None:
         self._tasks.discard(task)
         if not task.cancelled() and (exc := task.exception()):
+            traceback.print_exception(exc, file=sys.stderr)
+            if self.pod is not None and not self.pod.is_connected:
+                return  # the link dropped mid-action; the next check says "link lost"
             self._say(f"{type(exc).__name__}: {exc}", error=True)
 
-    def _say(self, text: str, error: bool = False) -> None:
+    def _say(self, text: str, error: bool = False, good: bool = False) -> None:
         """The last thing that happened, in the box under the controls."""
-        self.activity.setStyleSheet("color: #d33;" if error else "")
+        style = "color: #d33;" if error else "color: #2a2;" if good else ""
+        self.activity.setStyleSheet(style)
         self.activity.setText(text)
 
     def _link(self, text: str, error: bool = False) -> None:
@@ -248,6 +253,9 @@ class PodPanel(QGroupBox):
         self.boost.setChecked(self.pod.boost)
         self.boost.blockSignals(False)
         self._link("connected")
+        if self._lost:
+            self._lost = False
+            self._say("reconnected", good=True)
         self._adopt_initial()
         self._enable()
 
@@ -266,8 +274,9 @@ class PodPanel(QGroupBox):
         self.touched = any(a.mode != "empty" for a in initial.arms.values())
 
     def _check_link(self) -> None:
-        if self.pod is not None and self.pod.keepalive_error is not None:
-            self._link("link lost", error=True)
+        if self.pod is not None and not self.pod.is_connected:
+            self._link("link lost: push the pod's button, then Connect", error=True)
+            self._lost = True
             self._tasks.add(task := asyncio.ensure_future(self.pod.close()))
             task.add_done_callback(self._tasks.discard)
             self.pod = None

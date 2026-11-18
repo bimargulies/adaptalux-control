@@ -92,6 +92,11 @@ class Pod:
 
     # -- connection ---------------------------------------------------------
 
+    @property
+    def is_connected(self) -> bool:
+        """False once the link has dropped (or a keepalive write failed)."""
+        return bool(self._client.is_connected) and self.keepalive_error is None
+
     @classmethod
     async def connect(
         cls,

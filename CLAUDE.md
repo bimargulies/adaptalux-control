@@ -26,6 +26,10 @@ The sections below record how the protocol was decoded; where they disagree with
 - `scripts/make-app.sh` builds ~/Applications/Adaptalux.app, a launcher for this checkout (Info.plist has the
   Bluetooth usage string; execs .venv's python so the app keeps one PID/Dock icon; log in ~/Library/Logs/adaptalux.log;
   ad-hoc signed). Hardware-verified 2026-11-18 (Bluetooth prompt, window connected).
+- Link drops: bleak raises "Service Discovery has not been performed" / "disconnected" after the pod drops the link.
+  The window's 3 s check uses `Pod.is_connected` (bleak state + keepalive) and shows "link lost" with Connect;
+  reconnect shows green "reconnected". Hardware-verified 2026-11-18.
+- Moving the repo breaks `.venv` (editable .pth and script shebangs keep the old path): `rm -rf .venv && uv sync --extra gui`.
 - Not done: a standalone .app for other people's Macs (bundling + Developer ID signing/notarization); two-pod Standby unverified on hardware via the window;
   status bytes 5-8 undecoded (user does not want time spent on them).
 

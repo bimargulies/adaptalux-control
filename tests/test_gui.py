@@ -128,3 +128,25 @@ def test_untouched_pods_are_not_saved(tmp_path, monkeypatch):
             await panel.close()
 
     asyncio.run(go())
+
+
+def test_dropped_link_offers_connect_again(tmp_path):
+    async def go():
+        w, clients = window(tmp_path)
+        await settle()
+        fred = w.panels["fred"]
+        fred._say("BleakError: disconnected", error=True)
+        clients["fred"].is_connected = False  # bleak noticed the pod went away
+        fred._check_link()
+        await settle()
+        assert fred.pod is None
+        assert "link lost" in fred.status.text()
+        assert fred.connect_button.isVisibleTo(fred)
+        w.reconnect_all()
+        await settle()
+        assert fred.pod is not None and fred.pod.is_connected
+        assert fred.activity.text() == "reconnected"
+        await w.panels["fred"].close()
+        await w.panels["george"].close()
+
+    asyncio.run(go())
