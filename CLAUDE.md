@@ -29,6 +29,12 @@ The sections below record how the protocol was decoded; where they disagree with
 - Link drops: bleak raises "Service Discovery has not been performed" / "disconnected" after the pod drops the link.
   The window's 3 s check uses `Pod.is_connected` (bleak state + keepalive) and shows "link lost" with Connect;
   reconnect shows green "reconnected". Hardware-verified 2026-11-18.
+- A pod can also go silent while macOS still reports it connected: writes are acknowledged but `23` gets no reply
+  (read_boost TimeoutError every 3 s; seen 2026-11-18). The window now drops a pod after 2 unanswered status requests
+  ("not answering") and Pods -> Reconnect All force-reconnects every pod; restarting the app cleared it. The automatic
+  drop and forced reconnect are NOT yet seen on hardware. Clicks with no pod say "not sent: <pod> is not connected".
+- `scripts/restart-app.sh` quits (osascript; prints "User canceled" because the window defers quit to disconnect,
+  harmless) and reopens the app; the user allowed it in .claude/settings.local.json.
 - Moving the repo breaks `.venv` (editable .pth and script shebangs keep the old path): `rm -rf .venv && uv sync --extra gui`.
 - Not done: a standalone .app for other people's Macs (bundling + Developer ID signing/notarization); two-pod Standby unverified on hardware via the window;
   status bytes 5-8 undecoded (user does not want time spent on them).

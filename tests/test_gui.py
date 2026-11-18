@@ -150,3 +150,46 @@ def test_dropped_link_offers_connect_again(tmp_path):
         await w.panels["george"].close()
 
     asyncio.run(go())
+
+
+def test_silent_pod_is_dropped_and_reconnect_all_resets_live_pods(tmp_path):
+    async def go():
+        w, clients = window(tmp_path)
+        await settle()
+        fred, george = w.panels["fred"], w.panels["george"]
+
+        async def no_answer(*_a, **_k):
+            raise TimeoutError
+
+        fred.pod.read_boost = no_answer  # connected, but the pod stopped replying
+        fred._check_link()
+        await settle()
+        assert fred.pod is not None  # one miss is tolerated
+        fred._check_link()
+        await settle()
+        assert fred.pod is None and "not answering" in fred.status.text()
+
+        old_george = clients["george"]
+        w.reconnect_all()
+        await settle()
+        assert fred.pod is not None and fred.activity.text() == "reconnected"
+        assert clients["george"] is not old_george  # a fresh connection
+        assert not old_george.is_connected and george.pod.is_connected
+        await fred.close()
+        await george.close()
+
+    asyncio.run(go())
+
+
+def test_action_without_a_pod_is_refused_politely(tmp_path):
+    async def go():
+        w, _clients = window(tmp_path)
+        await settle()
+        fred = w.panels["fred"]
+        await fred.close()  # e.g. dropped while the click waited for the pod
+        fred._flash_chosen(1, 3)
+        await settle()
+        assert fred.activity.text() == "not sent: fred is not connected"
+        await w.panels["george"].close()
+
+    asyncio.run(go())

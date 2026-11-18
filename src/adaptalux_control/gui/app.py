@@ -38,6 +38,7 @@ from .model import ArmSetting, PodSetting
 
 CONFIG_DIR = Path.home() / ".config" / "adaptalux-control"
 LED_SEND_INTERVAL = 0.06  # seconds between brightness packets while a slider moves
+MAX_MISSES = 2  # unanswered status requests in a row before the link counts as dead
 STYLE = "QPushButton:checked { background: #3478f6; color: white; }"
 
 Connector = Callable[[str], Awaitable[Pod]]
@@ -159,12 +160,13 @@ class PodPanel(QGroupBox):
         self._flusher: asyncio.Future | None = None
         self._tasks: set[asyncio.Future] = set()
         self._lost = False  # the link dropped; the next successful connect says so
+        self._misses = 0  # status requests in a row the pod did not answer
 
         layout = QVBoxLayout(self)
         top = QHBoxLayout()
         self.boost = QCheckBox("Boost")
         self.boost.toggled.connect(self._boost_toggled)
-        self.status = QLabel("")
+        self.status = _message_label()
         self.status.setWordWrap(True)
         self.status.setAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
@@ -175,7 +177,7 @@ class PodPanel(QGroupBox):
         top.addWidget(self.status, 1)
         top.addWidget(self.connect_button)
         layout.addLayout(top)
-        self.activity = QLabel("")
+        self.activity = _message_label()
         self.activity.setWordWrap(True)
         self.activity.setMinimumHeight(24)
         self.activity_box = QFrame()
@@ -207,9 +209,17 @@ class PodPanel(QGroupBox):
         task.add_done_callback(self._finished)
         return task
 
+    def _live(self) -> Pod:
+        """The connected pod, or NotConnected (shown politely) if there is none."""
+        if self.pod is None:
+            raise NotConnected(f"not sent: {self.label} is not connected")
+        return self.pod
+
     def _finished(self, task: asyncio.Future) -> None:
         self._tasks.discard(task)
-        if not task.cancelled() and (exc := task.exception()):
+        if not task.cancelled() and isinstance(exc := task.exception(), NotConnected):
+            self._say(str(exc), error=True)
+        elif not task.cancelled() and exc:
             traceback.print_exception(exc, file=sys.stderr)
             if self.pod is not None and not self.pod.is_connected:
                 return  # the link dropped mid-action; the next check says "link lost"
@@ -239,6 +249,33 @@ class PodPanel(QGroupBox):
         if self.pod is None and not self._tasks:
             self._spawn(self._connect())
 
+    def reconnect(self) -> None:
+        """Drop the connection, even one that looks fine, and connect again."""
+        if self.pod is None:
+            self.start()
+            return
+        pod, self.pod = self.pod, None
+        self._lost = True
+        self._link("reconnecting…")
+        self._enable()
+
+        async def go() -> None:
+            await _close_quietly(pod)
+            await self._connect()
+
+        self._spawn(go())
+
+    def _drop(self, text: str) -> None:
+        """The link is gone or useless: let go of it and offer Connect."""
+        if self.pod is None:
+            return
+        self._link(text, error=True)
+        self._lost = True
+        self._tasks.add(task := asyncio.ensure_future(_close_quietly(self.pod)))
+        task.add_done_callback(self._tasks.discard)
+        self.pod = None
+        self._enable()
+
     async def _connect(self) -> None:
         self.connect_button.setEnabled(False)
         self._link("connecting…")
@@ -252,6 +289,7 @@ class PodPanel(QGroupBox):
         self.boost.blockSignals(True)
         self.boost.setChecked(self.pod.boost)
         self.boost.blockSignals(False)
+        self._misses = 0
         self._link("connected")
         if self._lost:
             self._lost = False
@@ -275,12 +313,7 @@ class PodPanel(QGroupBox):
 
     def _check_link(self) -> None:
         if self.pod is not None and not self.pod.is_connected:
-            self._link("link lost: push the pod's button, then Connect", error=True)
-            self._lost = True
-            self._tasks.add(task := asyncio.ensure_future(self.pod.close()))
-            task.add_done_callback(self._tasks.discard)
-            self.pod = None
-            self._enable()
+            self._drop("link lost: push the pod's button, then Connect")
         elif self.pod is not None and not self._lock.locked() and not self._tasks:
             self._spawn(self._sync_boost())
 
@@ -289,7 +322,15 @@ class PodPanel(QGroupBox):
         async with self._lock:
             if self.pod is None or self.standby:
                 return
-            on = await self.pod.read_boost()
+            try:
+                on = await self.pod.read_boost()
+            except TimeoutError:
+                # Connected, but the pod has stopped answering; a fresh connection may help.
+                self._misses += 1
+                if self._misses >= MAX_MISSES:
+                    self._drop("not answering: push the pod's button, then Connect")
+                return
+            self._misses = 0
         if on != self.boost.isChecked():
             self.boost.blockSignals(True)
             self.boost.setChecked(on)
@@ -310,10 +351,9 @@ class PodPanel(QGroupBox):
 
         async def go() -> None:
             async with self._lock:
-                await self.pod.set_boost(on)
+                await self._live().set_boost(on)
 
-        if self.pod is not None:
-            self._spawn(go())
+        self._spawn(go())  # without a pod, go() says so politely
 
     def _mode_changed(self, arm: int, mode: str) -> None:
         self.touched = True
@@ -330,6 +370,7 @@ class PodPanel(QGroupBox):
     def _queue_led(self, arm: int, percent: float) -> None:
         self.touched = True
         if self.pod is None:
+            self._say(f"not sent: {self.label} is not connected", error=True)
             return
         self._pending[arm] = percent
         if self._flusher is None or self._flusher.done():
@@ -339,7 +380,7 @@ class PodPanel(QGroupBox):
         while self._pending:
             async with self._lock:
                 batch, self._pending = self._pending, {}
-                await self.pod.set_arms(batch)
+                await self._live().set_arms(batch)
             await asyncio.sleep(LED_SEND_INTERVAL)
 
     def _flash_chosen(self, arm: int, level: int) -> None:
@@ -348,14 +389,13 @@ class PodPanel(QGroupBox):
         async def go() -> None:
             async with self._lock:
                 try:
-                    await self.pod.set_flash_level(arm, level)
+                    await self._live().set_flash_level(arm, level)
                 except BoostOff:
                     self._say("flash arms need Boost: turn it on", error=True)
                     return
             self._say(f"arm {arm}: flash level {level}")
 
-        if self.pod is not None:
-            self._spawn(go())
+        self._spawn(go())  # without a pod, go() says so politely
 
     # -- whole-pod operations -------------------------------------------------
 
@@ -367,7 +407,7 @@ class PodPanel(QGroupBox):
 
     async def wink(self) -> None:
         async with self._lock:
-            await self.pod.wink()
+            await self._live().wink()
 
     async def go_standby(self) -> None:
         """Turn the LED arms off, remembering how they were. Flash arms and boost stay."""
@@ -375,7 +415,7 @@ class PodPanel(QGroupBox):
             return
         async with self._lock:
             self._pending.clear()
-            self._saved = await self.pod.lights_off(self.setting().led_arms())
+            self._saved = await self._live().lights_off(self.setting().led_arms())
             self.standby = True
         self._enable()
 
@@ -383,7 +423,7 @@ class PodPanel(QGroupBox):
         if self.pod is None or not self.standby:
             return
         async with self._lock:
-            await self.pod.restore(self._saved)
+            await self._live().restore(self._saved)
             self.standby = False
         self._enable()
 
@@ -396,9 +436,9 @@ class PodPanel(QGroupBox):
         self.boost.setChecked(setting.boost)
         self.boost.blockSignals(False)
         async with self._lock:
-            await self.pod.restore(setting.lighting())
+            await self._live().restore(setting.lighting())
             for arm, level in setting.flash_levels().items():
-                await self.pod.set_flash_level(arm, level)
+                await self._live().set_flash_level(arm, level)
 
 
 async def ask_text(parent: QWidget, title: str, text: str) -> str:
@@ -412,6 +452,25 @@ async def ask_text(parent: QWidget, title: str, text: str) -> str:
     )
     dialog.open()
     return await done
+
+
+def _message_label() -> QLabel:
+    """A label whose text can be selected and copied (errors are worth pasting)."""
+    label = QLabel("")
+    label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    return label
+
+
+class NotConnected(Exception):
+    """A user action found no connected pod."""
+
+
+async def _close_quietly(pod: Pod) -> None:
+    """Disconnect a pod whose link may already be dead, without hanging or raising."""
+    try:
+        await asyncio.wait_for(pod.close(), 5)
+    except Exception as exc:  # noqa: BLE001 - the link is being abandoned anyway
+        print(f"closing pod: {exc!r}", file=sys.stderr)
 
 
 async def default_connector(label: str) -> Pod:
@@ -452,7 +511,7 @@ class MainWindow(QMainWindow):
         scroll.setWidgetResizable(True)
         scroll.setWidget(holder)
         outer.addWidget(scroll, 1)
-        self.message = QLabel("")
+        self.message = _message_label()
         self.message.setWordWrap(True)
         outer.addWidget(self.message)
         self.setCentralWidget(central)
@@ -490,7 +549,9 @@ class MainWindow(QMainWindow):
         self._busy.add_done_callback(self._job_done)
 
     def _job_done(self, task: asyncio.Future) -> None:
-        if not task.cancelled() and (exc := task.exception()):
+        if not task.cancelled() and isinstance(exc := task.exception(), NotConnected):
+            self._say(str(exc))
+        elif not task.cancelled() and exc:
             traceback.print_exception(exc, file=sys.stderr)
             self._say(f"{type(exc).__name__}: {exc}")
 
@@ -534,7 +595,7 @@ class MainWindow(QMainWindow):
 
     def reconnect_all(self) -> None:
         for panel in self.panels.values():
-            panel.start()
+            panel.reconnect()
 
     def save_configuration(self) -> None:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
