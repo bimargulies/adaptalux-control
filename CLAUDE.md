@@ -23,8 +23,10 @@ The sections below record how the protocol was decoded; where they disagree with
 - Working with the user: they observe hardware, so do ONE change per step and stop to ask what they see. Never send
   levels above 100 %. Pods sometimes stop advertising right after a disconnect: ask them to push the pod's button
   again. Only one central connects at a time (the window holds the connection; quit it before running scripts).
-- Not done: a packaged .app (needs Bluetooth usage string in Info.plist and signing/notarization to avoid
-  Gatekeeper warnings on other Macs); two-pod Standby unverified on hardware via the window;
+- `scripts/make-app.sh` builds ~/Applications/Adaptalux.app, a launcher for this checkout (Info.plist has the
+  Bluetooth usage string; execs .venv's python so the app keeps one PID/Dock icon; log in ~/Library/Logs/adaptalux.log;
+  ad-hoc signed). Hardware-verified 2026-11-18 (Bluetooth prompt, window connected).
+- Not done: a standalone .app for other people's Macs (bundling + Developer ID signing/notarization); two-pod Standby unverified on hardware via the window;
   status bytes 5-8 undecoded (user does not want time spent on them).
 
 ## Goal

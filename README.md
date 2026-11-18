@@ -192,6 +192,20 @@ pods in the file. **Pods → Identify Pods…** names new pods. The pod cannot r
 which arms are empty, LED or flash, so the window remembers them through the last
 file you saved or restored: at startup it shows those arm modes (and sends nothing).
 
+To open the window from Finder or the Dock, build a small app from a clone of the
+repository:
+
+```sh
+uv sync --extra gui
+scripts/make-app.sh            # creates ~/Applications/Adaptalux.app
+```
+
+Double-click it (or drag it to the Dock). The first time, macOS asks whether
+Adaptalux may use Bluetooth: allow it. The app runs the code in that clone, so rebuild
+it after moving the clone, and run `uv sync --extra gui` again after pulling changes.
+Errors go to `~/Library/Logs/adaptalux.log`. Quit the app before running scripts:
+only one program can be connected to a pod at a time.
+
 ## Sessions
 
 A `Pod` is a session, from `connect` until `close` (use `async with`). While it is
