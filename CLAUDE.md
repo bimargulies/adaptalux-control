@@ -265,7 +265,7 @@ No notifications were received in response to the `77` or `24` writes.
   blink green. Fred recovered fully once recharged (2026-11-18).
 - Status byte 6 = battery level. Pairs (app % / byte 6): 66/179, 65/178 (charging), 54/171, 53/170 (on battery, LED
   arms at 100 %), 32/155-156 (after firing the flash). Least-squares fit: pct = 1.456*byte - 194.5 (0 % ~134,
-  100 % ~202), every pair within 0.5 points; `protocol.battery_percent`. Unchecked below 32 %. LED arms drain slowly
+  100 % ~202), every pair within 0.5 points; `protocol.battery_percent`. Fred, charging, after several hours: app 90 %, window 89 %. Unchecked below 32 %. LED arms drain slowly
   (1 point in ~1.75 h with three arms at 100 %); flashing drains fast. Byte 6 wobbles by 1 right after flashing.
 - Code: protocol `status_charging`/`status_battery_raw`/`battery_percent`, `Pod.charging`/`Pod.battery_raw`; the window
   shows "battery N %" next to Boost, plus "· charging", or "· low" in red below 20 % on battery.
