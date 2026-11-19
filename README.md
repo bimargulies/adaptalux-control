@@ -6,7 +6,7 @@ Adaptalux iPhone app. It talks to the pod over Bluetooth LE using
 
 It can:
 
-- set the brightness (0-100 %) of each of the five lighting arms, or ramp it smoothly;
+- set the brightness (0-100 %) of each of the five lighting arms;
 - switch the pod's global **boost** on and off, and read it back;
 - set the power level (1-5) of Gen 2 **Xenon flash arms**;
 - tell several pods apart on one Mac, with names you choose.
@@ -33,7 +33,8 @@ To work on the code instead, clone the repository and run `uv sync --extra gui`.
 
 1. Close the iPhone app. A pod talks to one device at a time.
 2. Put the pod in Bluetooth mode: with at least one arm attached, hold its top
-   button until the blue light comes on. Hold it for 2 seconds to leave
+   button until the blue light comes on. If you want to disconnect it from
+   this app (or the iPhone app), hold it for 2 seconds to leave
    Bluetooth mode.
 
 The pod advertises as `Adaptalux3` only while it is in Bluetooth mode. If a pod
@@ -47,7 +48,6 @@ from adaptalux_control import Pod
 async def main():
     async with await Pod.connect() as pod:
         await pod.set_arms({1: 25, 2: 50})  # arm number -> percent
-        await pod.ramp({1: 100}, duration=2)
 
 
 asyncio.run(main())
@@ -79,7 +79,6 @@ effect.
 ```python
 await pod.set_arms({1: 25, 3: 80})  # only these change
 await pod.set_all(0)  # everything off
-await pod.ramp({2: 100}, duration=1.5)  # smooth change
 print(pod.arms)  # {1: 25.0, 2: 100.0, ...}
 ```
 
@@ -109,8 +108,9 @@ out (`dataclasses.asdict(saved)` gives a plain dict).
 
 ## Boost
 
-Boost is one global flag that makes every arm brighter. It is read from the pod
-when you connect, so ordinary commands leave it as it was.
+Boost is one global flag that makes all the arms brighter. It is read from the pod
+when you connect, so ordinary commands leave it as it was. Boost is required to use
+any flash arms.
 
 ```python
 await pod.set_boost(True)
@@ -120,22 +120,21 @@ on = await pod.read_boost()  # asks the pod, so it also sees changes made at the
 ## Flash arms
 
 Gen 2 Xenon flash arms take a power level from 1 (shortest flash) to 5 (most
-power):
+power). Flash arms also require the power level to be at 100%; the API takes care of this.
 
 ```python
 await pod.set_boost(True)
 await pod.set_flash_level(2, 3)  # arm 2, level 3
 ```
 
-- Boost must be on. `set_flash_level` reads the pod's real boost state and raises
+- Boost must be on. `set_flash_level` checks the pod's real boost state and raises
   `BoostOff` (a `ValueError`) without sending anything if it is off.
-- The arm's port is left at 100 % power, which flash arms need. You never set that
-  yourself.
+- The arm's port is set to 100 % power, which flash arms need. 
 - The call returns once the command is sent. The arm's lights then show it
   reaching the level: nearly at once for small changes, up to about a minute for a
   big jump up.
 - The pod cannot report a flash arm's level. Keep track of what you set.
-- Do not use `set_arms`, `ramp` or `wink` on a port holding a flash arm.
+- Do not use `set_arms` or `wink` on a port holding a flash arm.
 
 ## Several pods
 
@@ -174,7 +173,7 @@ async with await Pod.connect(label="bench") as pod:
 - Without `label` (or `address=`), `Pod.connect()` takes the first pod it finds, so
   use a label whenever more than one pod is advertising.
 
-## Window
+## GUI
 
 A small window controls every named pod (see *Several pods*):
 
@@ -220,7 +219,6 @@ the pod last answered; neither raises on its own, but your next command will.
 |---|---|
 | `Pod.connect(label=None, address=None, timeout=10, keepalive_interval=30)` | open a session |
 | `pod.set_arms({arm: percent})`, `pod.set_all(percent)` | brightness |
-| `pod.ramp({arm: percent}, duration)` | smooth brightness change |
 | `pod.set_boost(on)`, `await pod.read_boost()`, `pod.boost` | global boost |
 | `pod.set_flash_level(arm, level)` | flash arm power, 1-5 |
 | `await pod.lights_off(arms=None)`, `await pod.restore(lighting)`, `pod.snapshot()` | turn off; put it back |
@@ -276,5 +274,13 @@ uv run ruff check .
 ```
 
 `examples/` has small scripts that use a real pod: `scan.py` and `status.py` (raw
-Bluetooth), and `set_arms.py`, `ramp.py`, `boost.py` and `flash.py`, which use the
+Bluetooth), and `set_arms.py`, `boost.py` and `flash.py`, which use the
 `Pod` class and take `--label NAME`.
+
+
+## Reverse Enginnering
+
+As of this writing, this code was written with no input from Adaptalux. They are not responsible for any errors.
+The author accepts offers no warranty and accepts no responsibilty for any problems. There may well be some way to
+damage a pod or an arm using this code.
+

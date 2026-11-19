@@ -32,7 +32,6 @@ from .protocol import (
 )
 from .registry import PodRegistry
 
-RAMP_STEP_S = 0.06  # the iPhone app sends a packet about every 60 ms
 KEEPALIVE_S = 30.0  # how often a session asks the pod for status
 
 log = logging.getLogger(__name__)
@@ -51,7 +50,6 @@ class Pod:
 
         async with await Pod.connect(label="bench") as pod:
             await pod.set_arms({1: 25, 2: 50})
-            await pod.ramp({1: 0}, duration=2)
             await pod.set_boost(True)
             await pod.set_flash_level(2, 3)
 
@@ -328,34 +326,6 @@ class Pod:
         assert self._status_boost is not None
         self._boost = self._status_boost
         return self._boost
-
-    async def ramp(
-        self,
-        targets: dict[int, float],
-        duration: float = 1.0,
-        step: float = RAMP_STEP_S,
-    ) -> None:
-        """Move arms linearly to their target brightness over ``duration`` seconds.
-
-        Targets outside 0..100 % raise ValueError before anything is sent. Do not
-        use this on flash arms.
-        """
-        for arm, target in targets.items():
-            if arm not in ARM_TO_SLOT:
-                raise ValueError(f"no such arm {arm}; arms are 1-{SLOT_COUNT}")
-            check_percent(target)
-        start = self.arms
-        steps = max(1, round(duration / step))
-        for i in range(1, steps + 1):
-            frac = i / steps
-            await self.set_arms(
-                {
-                    a: min(100.0, max(0.0, start[a] + (t - start[a]) * frac))
-                    for a, t in targets.items()
-                }
-            )
-            if i < steps:
-                await asyncio.sleep(step)
 
     # -- internals ----------------------------------------------------------
 

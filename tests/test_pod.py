@@ -60,16 +60,6 @@ def test_set_arms_keeps_other_arms():
     asyncio.run(go())
 
 
-def test_ramp_ends_at_target():
-    async def go():
-        pod, c = await make()
-        await pod.ramp({4: 100}, duration=0.1, step=0.02)
-        assert pod.arms[4] == 100
-        assert c.writes[-1][5] == 0x00  # arm 4 is wire byte index 3 -> packet[4]
-
-    asyncio.run(go())
-
-
 def test_boost_and_unknown_arm():
     async def go():
         pod, c = await make()
@@ -90,8 +80,6 @@ def test_refuses_above_100_and_sends_nothing():
                 await pod.set_arms(bad)
         with pytest.raises(ValueError):
             await pod.set_all(150)
-        with pytest.raises(ValueError):
-            await pod.ramp({1: 120}, duration=0.1)
         assert len(c.writes) == n
         assert all(v <= 100 for v in pod.arms.values())
 
