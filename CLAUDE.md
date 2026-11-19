@@ -262,7 +262,7 @@ No notifications were received in response to the `77` or `24` writes.
 - Status byte 5 = on-charger flag (01 plugged in, 00 on battery): verified plugged/unplugged/plugged on George and in the
   window. Fred read 00 earlier because its charger cord had worked loose; it then ran flat (fast red blink). A flat-ish
   pod keeps its Bluetooth link but its controller stops answering `23` ("not answering"), loses boost, and flash arms
-  blink green.
+  blink green. Fred recovered fully once recharged (2026-11-18).
 - Status byte 6 = battery level. Pairs (app % / byte 6): 66/179, 65/178 (charging), 54/171, 53/170 (on battery, LED
   arms at 100 %), 32/155-156 (after firing the flash). Least-squares fit: pct = 1.456*byte - 194.5 (0 % ~134,
   100 % ~202), every pair within 0.5 points; `protocol.battery_percent`. Unchecked below 32 %. LED arms drain slowly
