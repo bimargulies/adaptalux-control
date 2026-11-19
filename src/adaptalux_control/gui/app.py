@@ -38,7 +38,9 @@ from .model import ArmSetting, PodSetting
 
 CONFIG_DIR = Path.home() / ".config" / "adaptalux-control"
 LED_SEND_INTERVAL = 0.06  # seconds between brightness packets while a slider moves
-LOW_BATTERY = 20  # percent; below this, on battery, the battery label turns red
+LOW_BATTERY = 20  # percent; below this, on battery: red label, beep, popup
+ALERT_SOUND = "Sosumi"  # a macOS system sound (/System/Library/Sounds)
+REARM_MARGIN = 5  # the popup comes back only after charging or climbing this far above
 MAX_MISSES = 2  # unanswered status requests in a row before the link counts as dead
 STYLE = "QPushButton:checked { background: #3478f6; color: white; }"
 
@@ -164,6 +166,8 @@ class PodPanel(QGroupBox):
         self._tasks: set[asyncio.Future] = set()
         self._lost = False  # the link dropped; the next successful connect says so
         self._misses = 0  # status requests in a row the pod did not answer
+        self._warned_low = False  # the low-battery popup has been shown for this drop
+        self.low_alert: QMessageBox | None = None
 
         layout = QVBoxLayout(self)
         top = QHBoxLayout()
@@ -256,6 +260,25 @@ class PodPanel(QGroupBox):
             text += " · low"
         self.power.setStyleSheet("color: #d33;" if low else "")
         self.power.setText(text)
+        if low and not self._warned_low:
+            self._warned_low = True
+            self._warn_low(percent)
+        elif pod.charging or percent >= LOW_BATTERY + REARM_MARGIN:
+            self._warned_low = False  # the next drop below LOW_BATTERY warns again
+
+    def _warn_low(self, percent: int) -> None:
+        """Beep and pop up a warning that doesn't block the window or the pods."""
+        _alert_sound()
+        box = QMessageBox(
+            QMessageBox.Icon.Warning,
+            "Battery low",
+            f"{self.label}'s battery is at {percent} %. Put it on the charger.",
+            QMessageBox.StandardButton.Ok,
+            self.window(),
+        )
+        box.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        box.open()
+        self.low_alert = box
 
     def _enable(self) -> None:
         live = self.pod is not None and not self.standby
@@ -504,6 +527,18 @@ def _message_label() -> QLabel:
     label = QLabel("")
     label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     return label
+
+
+def _alert_sound() -> None:
+    """A sound you can hear: QApplication.beep() was silent in this app on macOS."""
+    try:
+        from AppKit import NSSound
+    except ImportError:
+        QApplication.beep()
+        return
+    sound = NSSound.soundNamed_(ALERT_SOUND)
+    if sound is None or not sound.play():
+        QApplication.beep()
 
 
 class NotConnected(Exception):

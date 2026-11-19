@@ -274,3 +274,6 @@ No notifications were received in response to the `77` or `24` writes.
   (1 point in ~1.75 h with three arms at 100 %); flashing drains fast. Byte 6 wobbles by 1 right after flashing.
 - Code: protocol `status_charging`/`status_battery_raw`/`battery_percent`, `Pod.charging`/`Pod.battery_raw`; the window
   shows "battery N %" next to Boost, plus "· charging", or "· low" in red below 20 % on battery.
+- Low-battery alert (hardware-verified 2026-11-19 on George by unplugging the charger): below 20 % on battery the
+  window plays Sosumi via AppKit NSSound and opens a non-modal popup, once per drop (re-arms after charging or >= 25 %).
+  `QApplication.beep()` is SILENT in this app on macOS even though `osascript -e beep` works; do not go back to it.

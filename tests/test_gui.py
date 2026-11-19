@@ -251,7 +251,40 @@ def test_action_without_a_pod_is_refused_politely(tmp_path):
     asyncio.run(go())
 
 
-def test_battery_shown_as_percent_with_low_warning(tmp_path):
+def test_low_battery_beeps_and_pops_up_once_per_drop(tmp_path, monkeypatch):
+    beeps = []
+    monkeypatch.setattr(
+        "adaptalux_control.gui.app._alert_sound", lambda: beeps.append(1)
+    )
+
+    async def go():
+        w, _clients = window(tmp_path)
+        await settle()
+        fred = w.panels["fred"]
+        assert beeps == [] and fred.low_alert is None  # 53 % is fine
+        fred.pod.battery_raw = 145  # ~17 %, on battery
+        fred._show_power()
+        assert beeps == [1]
+        assert fred.low_alert.isVisible() and "17 %" in fred.low_alert.text()
+        fred.low_alert.close()
+        fred._show_power()  # still low: no second popup every 3 s
+        assert beeps == [1]
+        fred.pod.charging = True  # plugged in: stays quiet, and re-arms
+        fred._show_power()
+        assert beeps == [1]
+        fred.pod.charging = False
+        fred._show_power()
+        assert beeps == [1, 1]
+        fred.low_alert.close()
+        for panel in w.panels.values():
+            await panel.close()
+
+    asyncio.run(go())
+
+
+def test_battery_shown_as_percent_with_low_warning(tmp_path, monkeypatch):
+    monkeypatch.setattr("adaptalux_control.gui.app._alert_sound", lambda: None)
+
     async def go():
         w, _clients = window(tmp_path)
         await settle()
