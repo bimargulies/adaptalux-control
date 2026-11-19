@@ -193,3 +193,23 @@ def test_action_without_a_pod_is_refused_politely(tmp_path):
         await w.panels["george"].close()
 
     asyncio.run(go())
+
+
+def test_battery_shown_as_percent_with_low_warning(tmp_path):
+    async def go():
+        w, _clients = window(tmp_path)
+        await settle()
+        fred = w.panels["fred"]
+        assert fred.power.text() == "battery 53 %"  # the fake pod reports 0xaa = 170
+        fred.pod.charging = True
+        fred._show_power()
+        assert fred.power.text() == "battery 53 % · charging"
+        fred.pod.charging, fred.pod.battery_raw = False, 140
+        fred._show_power()
+        assert fred.power.text() == "battery 9 % · low"
+        await fred.close()
+        fred._enable()
+        assert fred.power.text() == ""
+        await w.panels["george"].close()
+
+    asyncio.run(go())

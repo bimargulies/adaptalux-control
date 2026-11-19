@@ -34,6 +34,13 @@ SLOT_COUNT = 5
 PACKET_LEN = 7
 STATUS_LEN = 11
 STATUS_BOOST_INDEX = 9  # 00 = boost off, 01 = boost on
+STATUS_CHARGING_INDEX = 5  # 01 = on the charger, 00 = on battery
+STATUS_BATTERY_INDEX = 6  # battery level; see battery_percent()
+
+# Battery byte -> the iPhone app's battery %, fitted to five readings from 32 % to 66 %
+# (all within 0.5 points). Empty is about 134, full about 202. Unchecked below 32 %.
+BATTERY_SLOPE = 1.456
+BATTERY_OFFSET = -194.5
 
 # Flash arm power level 1..5. The arm's slot byte is pulsed: 0xFF (about 0.2 s), then
 # FLASH_PULSE_BYTE for a level-dependent time, then 0x00 (100 %, where flash arms
@@ -125,6 +132,28 @@ def status_slot_percents(status: bytes) -> list[float]:
     if len(status) != STATUS_LEN:
         raise ValueError(f"status must be {STATUS_LEN} bytes, got {len(status)}")
     return [byte_to_percent(b) for b in status[:SLOT_COUNT]]
+
+
+def _check_status(status: bytes) -> None:
+    if len(status) != STATUS_LEN:
+        raise ValueError(f"status must be {STATUS_LEN} bytes, got {len(status)}")
+
+
+def status_charging(status: bytes) -> bool:
+    """Whether the pod reports being on its charger, from a status reply."""
+    _check_status(status)
+    return bool(status[STATUS_CHARGING_INDEX])
+
+
+def status_battery_raw(status: bytes) -> int:
+    """The pod's battery byte, 0-255, from a status reply (see battery_percent)."""
+    _check_status(status)
+    return status[STATUS_BATTERY_INDEX]
+
+
+def battery_percent(raw: int) -> int:
+    """The battery byte as the iPhone app's percentage, 0-100."""
+    return max(0, min(100, round(BATTERY_SLOPE * raw + BATTERY_OFFSET)))
 
 
 def status_boost(status: bytes) -> bool:

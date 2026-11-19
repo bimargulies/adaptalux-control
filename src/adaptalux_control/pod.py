@@ -25,7 +25,9 @@ from .protocol import (
     check_percent,
     encode_slots,
     slot_percents_to_arms,
+    status_battery_raw,
     status_boost,
+    status_charging,
     status_slot_percents,
 )
 from .registry import PodRegistry
@@ -88,6 +90,8 @@ class Pod:
         self._status_ready = asyncio.Event()
         self._status_slots: list[float] | None = None
         self._status_boost: bool | None = None
+        self.charging: bool | None = None  # on the charger, per the last status reply
+        self.battery_raw: int | None = None  # battery byte from the last status reply
         self._status_waiter: asyncio.Future[None] | None = None
 
     # -- connection ---------------------------------------------------------
@@ -377,6 +381,8 @@ class Pod:
         if status is None:
             return
         self._status_boost = status_boost(status)
+        self.charging = status_charging(status)
+        self.battery_raw = status_battery_raw(status)
         if self._status_waiter is not None and not self._status_waiter.done():
             self._status_waiter.set_result(None)
         self._last_status_time = time.monotonic()

@@ -31,13 +31,14 @@ from PySide6.QtWidgets import (
 
 from ..lighting import Lighting
 from ..pod import BoostOff, Pod, PodNotFound
-from ..protocol import ARM_TO_SLOT
+from ..protocol import ARM_TO_SLOT, battery_percent
 from ..registry import PodRegistry, scan_pods
 from . import model
 from .model import ArmSetting, PodSetting
 
 CONFIG_DIR = Path.home() / ".config" / "adaptalux-control"
 LED_SEND_INTERVAL = 0.06  # seconds between brightness packets while a slider moves
+LOW_BATTERY = 20  # percent; below this, on battery, the battery label turns red
 MAX_MISSES = 2  # unanswered status requests in a row before the link counts as dead
 STYLE = "QPushButton:checked { background: #3478f6; color: white; }"
 
@@ -174,6 +175,8 @@ class PodPanel(QGroupBox):
         self.connect_button = QPushButton("Connect")
         self.connect_button.clicked.connect(self.start)
         top.addWidget(self.boost)
+        self.power = _message_label()  # charger flag and battery byte from the pod
+        top.addWidget(self.power)
         top.addWidget(self.status, 1)
         top.addWidget(self.connect_button)
         layout.addLayout(top)
@@ -236,8 +239,25 @@ class PodPanel(QGroupBox):
         self.status.setStyleSheet("color: #d33;" if error else "")
         self.status.setText(text)
 
+    def _show_power(self) -> None:
+        """Charger and battery, from the pod's last status reply."""
+        pod = self.pod
+        if pod is None or pod.battery_raw is None:
+            self.power.setText("")
+            return
+        percent = battery_percent(pod.battery_raw)
+        low = percent < LOW_BATTERY and not pod.charging
+        text = f"battery {percent} %"
+        if pod.charging:
+            text += " · charging"
+        elif low:
+            text += " · low"
+        self.power.setStyleSheet("color: #d33;" if low else "")
+        self.power.setText(text)
+
     def _enable(self) -> None:
         live = self.pod is not None and not self.standby
+        self._show_power()
         self.boost.setEnabled(live)
         for row in self.rows.values():
             row.setEnabled(live)
@@ -331,6 +351,7 @@ class PodPanel(QGroupBox):
                     self._drop("not answering: push the pod's button, then Connect")
                 return
             self._misses = 0
+        self._show_power()
         if on != self.boost.isChecked():
             self.boost.blockSignals(True)
             self.boost.setChecked(on)

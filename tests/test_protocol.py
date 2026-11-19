@@ -68,3 +68,21 @@ def test_status_reassembly():
     assert r.feed(full[:4]) is None
     assert r.feed(full[4:]) == full
     assert status_slot_percents(full) == pytest.approx([50] * 5, abs=0.5)
+
+
+def test_status_charging_and_battery():
+    from adaptalux_control.protocol import status_battery_raw, status_charging
+
+    plugged = bytes.fromhex("8000808080 01 b3 00 02 01 77".replace(" ", ""))
+    unplugged = bytes.fromhex("8000808080 00 b3 00 02 01 77".replace(" ", ""))
+    assert status_charging(plugged) is True
+    assert status_charging(unplugged) is False
+    assert status_battery_raw(plugged) == 0xB3
+
+
+def test_battery_percent_matches_app_readings():
+    from adaptalux_control.protocol import battery_percent
+
+    for raw, app in [(179, 66), (178, 65), (171, 54), (170, 53), (155, 32)]:
+        assert abs(battery_percent(raw) - app) <= 1
+    assert battery_percent(0) == 0 and battery_percent(255) == 100

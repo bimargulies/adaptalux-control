@@ -278,3 +278,13 @@ def test_lighting_validation():
         Lighting({1: 10}, False)  # needs all five arms
     with pytest.raises(ValueError):
         Lighting({a: 101 for a in range(1, 6)}, False)  # never above 100 %
+
+
+def test_status_reply_sets_charging_and_battery():
+    async def go():
+        pod, _c = await make()
+        assert pod.charging is False  # the fake pod reports byte 5 = 00
+        assert pod.battery_raw == 0xAA
+        await pod.close()
+
+    asyncio.run(go())
