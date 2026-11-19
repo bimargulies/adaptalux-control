@@ -36,6 +36,10 @@ The sections below record how the protocol was decoded; where they disagree with
 - `scripts/restart-app.sh` quits (osascript; prints "User canceled" because the window defers quit to disconnect,
   harmless) and reopens the app; the user allowed it in .claude/settings.local.json.
 - Moving the repo breaks `.venv` (editable .pth and script shebangs keep the old path): `rm -rf .venv && uv sync --extra gui`.
+- Standby flag is per panel and used to outlive a dropped link (2026-11-19: George reconnected with every control
+  greyed out). Now Resume reaches every panel; a disconnected one unlocks at once and relights the LED arms Standby
+  dimmed when it reconnects (boost untouched); File -> Restore ends standby. Fix confirmed by the user; the
+  relight-on-reconnect path itself is only covered by tests.
 - Not done: a standalone .app for other people's Macs (bundling + Developer ID signing/notarization); two-pod Standby unverified on hardware via the window;
   status bytes 5-8 undecoded (user does not want time spent on them).
 

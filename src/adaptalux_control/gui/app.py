@@ -156,6 +156,8 @@ class PodPanel(QGroupBox):
         self.pod: Pod | None = None
         self.standby = False
         self._saved: Lighting | None = None
+        self._dimmed: list[int] = []  # LED arms standby turned off
+        self._resume_on_connect = False  # Resume came while the link was down
         self._lock = asyncio.Lock()  # one pod operation at a time
         self._pending: dict[int, float] = {}
         self._flusher: asyncio.Future | None = None
@@ -316,6 +318,8 @@ class PodPanel(QGroupBox):
             self._say("reconnected", good=True)
         self._adopt_initial()
         self._enable()
+        if self._resume_on_connect:
+            await self._resume_late()
 
     def _adopt_initial(self) -> None:
         """Show the remembered arm modes. Nothing is sent to the pod.
@@ -436,17 +440,34 @@ class PodPanel(QGroupBox):
             return
         async with self._lock:
             self._pending.clear()
-            self._saved = await self._live().lights_off(self.setting().led_arms())
+            self._dimmed = self.setting().led_arms()
+            self._saved = await self._live().lights_off(self._dimmed)
             self.standby = True
         self._enable()
 
     async def resume(self) -> None:
-        if self.pod is None or not self.standby:
+        if not self.standby:
+            return
+        if self.pod is None:
+            # The link dropped during standby: unlock the controls now and relight
+            # the arms once the pod is back, so the panel can't stay greyed out.
+            self.standby = False
+            self._resume_on_connect = True
+            self._enable()
             return
         async with self._lock:
             await self._live().restore(self._saved)
             self.standby = False
         self._enable()
+
+    async def _resume_late(self) -> None:
+        """Relight the LED arms standby turned off; boost may have changed meanwhile."""
+        self._resume_on_connect = False
+        if self._saved is None:
+            return
+        async with self._lock:
+            await self._live().set_arms({a: self._saved.arms[a] for a in self._dimmed})
+        self._say("lights back on (Resume was pressed while disconnected)")
 
     async def apply(self, setting: PodSetting) -> None:
         """Show ``setting`` and send it: boost and LED levels in one packet, then flash levels."""
@@ -458,6 +479,9 @@ class PodPanel(QGroupBox):
         self.boost.blockSignals(False)
         async with self._lock:
             await self._live().restore(setting.lighting())
+            # The file's levels replace whatever standby was holding back.
+            self.standby, self._resume_on_connect = False, False
+            self._enable()
             for arm, level in setting.flash_levels().items():
                 await self._live().set_flash_level(arm, level)
 
@@ -605,11 +629,10 @@ class MainWindow(QMainWindow):
 
     def _standby_clicked(self, on: bool) -> None:
         async def go() -> None:
-            panels = self.connected()
             if on:
-                await asyncio.gather(*(p.go_standby() for p in panels))
-            else:
-                await asyncio.gather(*(p.resume() for p in panels))
+                await asyncio.gather(*(p.go_standby() for p in self.connected()))
+            else:  # every pod: one whose link dropped during standby must unlock too
+                await asyncio.gather(*(p.resume() for p in self.panels.values()))
             self.standby_button.setText("Resume" if on else "Standby")
 
         self._run(go())
@@ -656,6 +679,9 @@ class MainWindow(QMainWindow):
                 else:
                     jobs.append(panel.apply(setting))
             await asyncio.gather(*jobs)
+            if not any(p.standby for p in self.panels.values()):
+                self.standby_button.setChecked(False)
+                self.standby_button.setText("Standby")
             self._settings.setValue("last_config", name)
             self._say(
                 f"restored {name}"

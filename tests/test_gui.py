@@ -67,6 +67,62 @@ def test_led_slider_sends_and_standby_restores(tmp_path):
     asyncio.run(go())
 
 
+def test_resume_while_dropped_unlocks_and_relights_on_reconnect(tmp_path):
+    async def go():
+        w, clients = window(tmp_path)
+        await settle()
+        george = w.panels["george"]
+        george.rows[1].mode_buttons["led"].click()
+        george.rows[1].slider.setValue(25)
+        await settle()
+        w.standby_button.click()
+        await settle()
+        assert clients["george"].writes[-1].hex() == "7780ff80808000"
+        clients["george"].is_connected = False  # link drops during standby
+        george._check_link()
+        await settle()
+        w.standby_button.click()  # Resume while george is away
+        await settle()
+        assert not george.standby
+        w.reconnect_all()
+        await settle()
+        assert george.pod is not None
+        assert george.rows[1].isEnabled() and george.boost.isEnabled()
+        assert clients["george"].writes[-1].hex() == "7780c080808000"
+        for panel in w.panels.values():
+            await panel.close()
+
+    asyncio.run(go())
+
+
+def test_restore_during_standby_unlocks_controls(tmp_path, monkeypatch):
+    path = tmp_path / "lights.yaml"
+    setting = PodSetting()
+    setting.arms[1] = ArmSetting("led", 60)
+    path.write_text(model.dump({"fred": setting}))
+    monkeypatch.setattr(
+        "adaptalux_control.gui.app.QFileDialog.getOpenFileName",
+        lambda *a, **k: (str(path), ""),
+    )
+
+    async def go():
+        w, _clients = window(tmp_path)
+        await settle()
+        fred = w.panels["fred"]
+        fred.rows[1].mode_buttons["led"].click()
+        await settle()
+        w.standby_button.click()
+        await settle()
+        assert not fred.rows[1].isEnabled()
+        w.restore_configuration()
+        await settle()
+        assert fred.rows[1].isEnabled() and not fred.standby
+        for panel in w.panels.values():
+            await panel.close()
+
+    asyncio.run(go())
+
+
 def test_flash_needs_boost_then_pulses(tmp_path):
     async def go():
         w, clients = window(tmp_path)
