@@ -188,7 +188,10 @@ No notifications were received in response to the `77` or `24` writes.
 - Last byte of `77 ... FLAG` = boost switch (01 on, 00 off). Boost is a single GLOBAL flag for the whole pod
   (not per arm); it brightens all arms at every level.
 - App arm order -> slot byte: arm1=byte1, arm2=byte0, arm3=byte3, arm4=byte4 (verified from
-  captures/four-arms); arm5=byte2. All five verified on hardware 2026-11-16 (experiments 06-08, user confirmed visually).
+  captures/four-arms); arm5=byte2.
+  PHYSICAL HOLES (user observed on George 2026-11-19): arm1 top left, arm2 top right, arm5 bottom left, arm4 bottom
+  right, arm3 bottom middle (inferred, the one left over). The bottom row is NOT 3-4-5. The window labels rows by
+  hole (`ARM_PLACES` in gui/app.py); config files keep arm numbers. All five verified on hardware 2026-11-16 (experiments 06-08, user confirmed visually).
 - Library: `protocol.py` (pure, tested) and `pod.py` (`Pod`, bleak). Not yet run against hardware.
 - Hardware-verified: inverted encoding, off at 0xFF, per-arm independence, all five arms.
 - Quirk: the status reply reports an EMPTY slot as 50 % (0x80), so `Pod` adopts 50 % for unplugged

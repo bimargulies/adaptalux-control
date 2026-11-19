@@ -40,6 +40,16 @@ CONFIG_DIR = Path.home() / ".config" / "adaptalux-control"
 LED_SEND_INTERVAL = 0.06  # seconds between brightness packets while a slider moves
 LOW_BATTERY = 20  # percent; below this, on battery: red label, beep, popup
 ALERT_SOUND = "Sosumi"  # a macOS system sound (/System/Library/Sounds)
+# Where each arm number's hole is on the pod (George, user observed 2026-11-19; bottom
+# middle inferred as the one left over). Rows are listed in this order, top row first.
+ARM_PLACES = {
+    1: "Top left",
+    2: "Top right",
+    5: "Bottom left",
+    3: "Bottom middle",
+    4: "Bottom right",
+}
+assert set(ARM_PLACES) == set(ARM_TO_SLOT)
 REARM_MARGIN = 5  # the popup comes back only after charging or climbing this far above
 MAX_MISSES = 2  # unanswered status requests in a row before the link counts as dead
 STYLE = "QPushButton:checked { background: #3478f6; color: white; }"
@@ -68,7 +78,9 @@ class ArmRow(QWidget):
         self.level: int | None = None
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(QLabel(f"{arm}"))
+        place = QLabel(ARM_PLACES[arm])
+        place.setMinimumWidth(100)
+        layout.addWidget(place)
 
         self.mode_buttons: dict[str, QPushButton] = {}
         group = QButtonGroup(self)
@@ -197,7 +209,7 @@ class PodPanel(QGroupBox):
         layout.addWidget(self.activity_box)
 
         self.rows: dict[int, ArmRow] = {}
-        for arm in sorted(ARM_TO_SLOT):
+        for arm in ARM_PLACES:
             row = ArmRow(arm)
             row.modeChanged.connect(self._mode_changed)
             row.ledChanged.connect(self._led_changed)
@@ -441,7 +453,7 @@ class PodPanel(QGroupBox):
                 except BoostOff:
                     self._say("flash arms need Boost: turn it on", error=True)
                     return
-            self._say(f"arm {arm}: flash level {level}")
+            self._say(f"{ARM_PLACES[arm].lower()}: flash level {level}")
 
         self._spawn(go())  # without a pod, go() says so politely
 

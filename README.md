@@ -57,7 +57,8 @@ Levels persist on the pod after you disconnect.
 
 ## Arms
 
-Arms are numbered as in the iPhone app, looking at the pod's holes:
+Arms are numbered as in the iPhone app's packets. Looking at the pod's holes, the
+bottom row is not in order (the window labels rows by position instead):
 
 ```
      +-------+   +-------+
@@ -65,7 +66,7 @@ Arms are numbered as in the iPhone app, looking at the pod's holes:
      +-------+   +-------+
 
   +-------+   +-------+   +-------+
-  | arm 3 |   | arm 4 |   | arm 5 |
+  | arm 5 |   | arm 3 |   | arm 4 |
   +-------+   +-------+   +-------+
 ```
 
