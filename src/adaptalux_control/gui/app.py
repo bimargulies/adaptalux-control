@@ -7,8 +7,8 @@ from collections.abc import Awaitable, Callable
 from functools import partial
 from pathlib import Path
 
-from PySide6.QtCore import QSettings, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QCloseEvent
+from PySide6.QtCore import QRectF, QSettings, Qt, QTimer, Signal
+from PySide6.QtGui import QAction, QCloseEvent, QPainter, QPen
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -50,6 +50,10 @@ ARM_PLACES = {
     4: "Bottom right",
 }
 assert set(ARM_PLACES) == set(ARM_TO_SLOT)
+# Hole centres for the icon, in hole-widths: (column, row). The top pair sits between
+# the bottom three, as on the pod.
+ARM_ICON_CELLS = {1: (0.5, 0), 2: (1.5, 0), 5: (0, 1), 3: (1, 1), 4: (2, 1)}
+assert set(ARM_ICON_CELLS) == set(ARM_PLACES)
 REARM_MARGIN = 5  # the popup comes back only after charging or climbing this far above
 MAX_MISSES = 2  # unanswered status requests in a row before the link counts as dead
 STYLE = "QPushButton:checked { background: #3478f6; color: white; }"
@@ -65,6 +69,32 @@ def _segment(text: str, width: int) -> QPushButton:
     return button
 
 
+class PlaceIcon(QWidget):
+    """A tiny drawing of the pod's five holes with one filled in."""
+
+    def __init__(self, arm: int) -> None:
+        super().__init__()
+        self.arm = arm
+        self.setFixedSize(46, 28)
+        self.setToolTip(ARM_PLACES[arm])
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        color = self.palette().text().color()
+        size = 10.0
+        pitch = 14.0
+        for arm, (col, row) in ARM_ICON_CELLS.items():
+            rect = QRectF(2 + col * pitch + 1, 2 + row * pitch + 1, size, size)
+            if arm == self.arm:
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.setBrush(color)
+            else:
+                painter.setPen(QPen(color, 1))
+                painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawEllipse(rect)
+
+
 class ArmRow(QWidget):
     """One arm: a three-way switch (empty / LED / flash) and its control."""
 
@@ -78,9 +108,7 @@ class ArmRow(QWidget):
         self.level: int | None = None
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        place = QLabel(ARM_PLACES[arm])
-        place.setMinimumWidth(100)
-        layout.addWidget(place)
+        layout.addWidget(PlaceIcon(arm))
 
         self.mode_buttons: dict[str, QPushButton] = {}
         group = QButtonGroup(self)
